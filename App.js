@@ -1,8 +1,9 @@
 import React from 'react';
 import Icon from "@builderx/icons";
-import { Text, View, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { Text, View, StyleSheet, Image, TouchableOpacity, Dimensions, AsyncStorage } from 'react-native';
 import { createBottomTabNavigator, createAppContainer, } from 'react-navigation';
 import { accelerometer, gyroscope } from "react-native-sensors";
+//import DrivingScreen from "DrivingScreen";
 import {
     LineChart,
     BarChart,
@@ -15,7 +16,7 @@ import {
 const Value = ({name, value}) => (
     <View style={styles.valueContainer}>
         <Text style={styles.valueName}>{name}:</Text>
-        <Text style={styles.valueValue}>{new String(value).substr(0, 8)}</Text>
+        <Text style={styles.valueValue}>{new String(value).substr(0, 10)}</Text>
     </View>
 )
 
@@ -78,42 +79,38 @@ class SettingsScreen extends React.Component {
 class AnalyticsScreen extends React.Component {
     constructor(props) {
         super(props);
-
-        accelerometer.subscribe(({x,y,z}) => this.setState({x,y,z}));
-        this.state = {x: 0, y: 0, z: 0};
+        this.state={};
+    }
+    async componentDidMount(){
+        await AsyncStorage.getItem( 'Session' )
+            .then( data => {
+                // transform it back to an object
+                data = JSON.parse( data );
+                this.setState(data);
+            }).done();
     }
 
     render() {
         return (
             <View style={styles.container}>
-                <Text style={styles.headline}>
-                    Accelerometer values
-                </Text>
-                <Value name="x" value={this.state.x} />
-                <Value name="y" value={this.state.y} />
-                <Value name="z" value={this.state.z} />
                 <View>
                     <Text>
                         Bezier Line Chart
                     </Text>
                     <LineChart
                         data={{
-                            labels: ['X', 'Y', 'Z'],
+                            labels: this.state.timestamps,
                             datasets: [{
-                                data: [
-                                    this.state.x,
-                                    this.state.y,
-                                    this.state.z,
-                                ]
+                                data: this.state.Az
                             }]
                         }}
                         width={Dimensions.get('window').width} // from react-native
                         height={220}
-                        yAxisLabel={'$'}
+                        yAxisLabel={'acc'}
                         chartConfig={{
-                            backgroundColor: '#e26a00',
-                            backgroundGradientFrom: '#fb8c00',
-                            backgroundGradientTo: '#ffa726',
+                            backgroundColor: '#040404',
+                            backgroundGradientFrom: '#1661db',
+                            backgroundGradientTo: '#0403ff',
                             decimalPlaces: 2, // optional, defaults to 2dp
                             color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                             style: {
@@ -125,6 +122,7 @@ class AnalyticsScreen extends React.Component {
                             marginVertical: 8,
                             borderRadius: 16
                         }}
+                        fromZero={true}
                     />
                 </View>
             </View>
@@ -132,11 +130,64 @@ class AnalyticsScreen extends React.Component {
         );
     }
 }
+class DrivingScreen extends React.Component {
+    constructor(props) {
+        super(props);
 
+        accelerometer.subscribe(({x,y,z,timestamp}) => this.maybeSetState({x,y,z,timestamp}));
+        this.state = {x: 0, y: 0, z: 0, timestamp: 0};
+        let init={Ax: [], Ay: [], Az: [], timestamps: []};
+        try {
+            AsyncStorage.setItem('Session', JSON.stringify(init));
+        } catch (er) {
+               error(er);
+        }
+    }
+    maybeSetState(update){
+        if(update.timestamp - this.state.timestamp > 50){
+            this.setState(update);
+            try {
+                AsyncStorage.getItem( 'Session' )
+                    .then( data => {
+
+                        // transform it back to an object
+                        data = JSON.parse( data );
+                        data.Ax.push(update.x);
+                        data.Ay.push(update.y);
+                        data.Az.push(update.z);
+                        data.timestamps.push(update.timestamp);
+
+                        //save the value to AsyncStorage again
+                        AsyncStorage.setItem( 'Session', JSON.stringify( data ));
+                    }).done();
+            } catch (er) {
+                error(er);
+            }
+        }
+        else{
+            return;
+        }
+    }
+    render() {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.headline}>
+                    Accelerometer values
+                </Text>
+                <Value name="x" value={this.state.x} />
+                <Value name="y" value={this.state.y} />
+                <Value name="z" value={this.state.z} />
+                <Value name="ts" value={this.state.timestamp} />
+            </View>
+
+        );
+    }
+}
 const TabNavigator = createBottomTabNavigator({
   Home: HomeScreen,
   Settings: SettingsScreen,
-    Analytics: AnalyticsScreen
+    Analytics: AnalyticsScreen,
+    Driving: DrivingScreen
 });
 const styles = StyleSheet.create({
     root: {
