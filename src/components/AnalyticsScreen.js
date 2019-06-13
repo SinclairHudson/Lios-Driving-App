@@ -1,43 +1,34 @@
-import {accelerometer} from "react-native-sensors";
-import {Dimensions, Text, View} from "react-native";
+import {AsyncStorage, Dimensions, Text, View} from "react-native";
+import styles from "./styling";
 import {LineChart} from "react-native-chart-kit";
+import React from 'react';
 
-class DrivingScreen extends React.Component {
+class AnalyticsScreen extends React.Component {
     constructor(props) {
         super(props);
+        this.state={};
+    }
+    async componentDidMount(){
+        await AsyncStorage.getItem( 'Session' )
+            .then( data => {
+                // transform it back to an object
+                data = JSON.parse( data );
+                this.setState(data);
+            }).done();
+    }
 
-        accelerometer.subscribe(({x,y,z,timestamp}) => this.maybeSetState({x,y,z,timestamp}));
-        this.state = {x: 0, y: 0, z: 0, timestamp: 0};
-    }
-    maybeSetState(update){
-        if(update.timestamp - this.state.timestamp > 50){
-            
-            this.setState(latest);
-        }
-        else{
-            return;
-        }
-    }
     render() {
         return (
             <View style={styles.container}>
-                <Text style={styles.headline}>
-                    Accelerometer values
-                </Text>
-                <Value name="x" value={this.state.x} />
-                <Value name="y" value={this.state.y} />
-                <Value name="z" value={this.state.z} />
-                <Value name="ts" value={this.state.timestamp} />
-                <Text>{this.state.timestamp}</Text>
                 <View>
                     <Text>
                         Bezier Line Chart
                     </Text>
                     <LineChart
                         data={{
-                            labels: ['X', 'Y', 'Z'],
+                            labels: this.state.timestamps,
                             datasets: [{
-                                data: this.state.queue
+                                data: this.state.Az
                             }]
                         }}
                         width={Dimensions.get('window').width} // from react-native
@@ -67,4 +58,4 @@ class DrivingScreen extends React.Component {
     }
 }
 
-export default DrivingScreen;
+export default AnalyticsScreen;
