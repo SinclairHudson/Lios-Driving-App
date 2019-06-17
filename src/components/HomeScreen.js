@@ -1,51 +1,65 @@
-import {Image, Text, TouchableOpacity, View} from "react-native";
-import styles from "./styling";
-import Icon from "@builderx/icons";
+import {Image, Text, TouchableOpacity, View, SafeAreaView} from "react-native";
+import {withNavigation} from 'react-navigation';
+import s from "./styling";
+import {Icon} from 'react-native-elements'
 import React from 'react';
+import LinearGradient from 'react-native-linear-gradient';
 
 class HomeScreen extends React.Component {
     render() {
         return (
-            <View style={styles.root}>
+            <LinearGradient
+                colors={['#3760a3', '#328bc3']}
+                style={s.grad}>
                 <Image
                     source={require("../assets/LiosLogo.png")}
-                    style={styles.image}
+                    style={s.image}
                 />
-                <View style={styles.driveButton}>
-                    <TouchableOpacity style={styles.button}/>
-
-                    <Icon
-                        style={styles.icon}
-                        name="steering"
-                        type="MaterialCommunityIcons"
-                    />
-                    <Text style={styles.text}>DRIVE</Text>
+                <View style={s.buttons}>
+                    <TouchableOpacity
+                        style={s.button}
+                        onPress={() => {
+                            this.props.navigation.navigate("Driving");
+                        }}>
+                        <View style={s.icon}>
+                            <Icon
+                                name="car"
+                                type="font-awesome"
+                                color='#FFD630'
+                            />
+                        </View>
+                        <Text style={s.buttonText}>DRIVE</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={s.button}
+                        onPress={() => {
+                            this.props.navigation.navigate("Analytics");
+                        }}>
+                        <View style={s.icon}>
+                            <Icon
+                                name='timeline'
+                                type='material'
+                                color='#FFD630'
+                            />
+                        </View>
+                        <Text style={s.buttonText}>ANALYTICS</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={s.button}
+                        onPress={() => {
+                            this.props.navigation.navigate("Settings");
+                        }}>
+                        <View style={s.icon}>
+                            <Icon
+                                name="settings"
+                                type="material"
+                                color='#FFD630'
+                            />
+                        </View>
+                        <Text style={s.buttonText}>SETTINGS</Text>
+                    </TouchableOpacity>
                 </View>
-                <View style={styles.analyticsButton}>
-                    <TouchableOpacity style={styles.button2}/>
-                    {/*
-                    <Icon
-                        style={styles.icon2}
-                        name="trending-up"
-                        type="MaterialCommunityIcons"
-                    />      */}
-                    <Text style={styles.text2}>ANALYTICS</Text>
-                </View>
-                <TouchableOpacity
-                    style={styles.settingsButton}
-                    onPress={() => {
-                        this.props.navigation.push("SettingsScreen");
-                    }}
-                >
-                    <TouchableOpacity style={styles.button3} />
-                    {/*
-                    <Icon
-                        style={styles.icon3}
-                        name="settings-outline"
-                        type="MaterialCommunityIcons"
-                    /> */}
-                </TouchableOpacity>
-            </View>
+            </LinearGradient>
         );
     }
 }
