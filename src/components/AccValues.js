@@ -17,32 +17,59 @@ class AccValues extends React.Component {
         super(props);
 
         accelerometer.subscribe(({x, y, z, timestamp}) => this.maybeSetState({x, y, z, timestamp}));
-        this.state = {x: 0, y: 0, z: 0, timestamp: 0};
-        let init = {Ax: [], Ay: [], Az: [], timestamps: []};
+        this.state = {x: 0, y: 0, z: 0, timestamp: 0, speed: 0};
+        let init = {Ax: [], Ay: [], Az: [], timestamps: [], speeds: []};
         try {
-            AsyncStorage.setItem('Session', JSON.stringify(init));
+            AsyncStorage.setItem(this.props.sess, JSON.stringify(init));
         } catch (er) {
             error(er);
         }
     }
 
-    maybeSetState(update) {
-        if (update.timestamp - this.state.timestamp > 50) {
-            this.setState(update);
-            try {
-                AsyncStorage.getItem('Session')
-                    .then(data => {
-                        // transform it back to an object
+    componentDidMount() {
+        this.watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                let temp = this.state;
+                temp.speed = position.coords.speed;
+                this.setState(temp);
+            },
+            (error) => this.setState({error: error.message}),
+            {enableHighAccuracy: true, timeout: 200, maximumAge: 500, distanceFilter: 1},
+        );
+    }
+
+    componentWillUnmount() {
+        navigator.geolocation.clearWatch(this.watchId);
+    }
+
+    archive() {
+        try {
+            AsyncStorage.getItem(this.props.sess)
+                .then(data => {
+                    // transform it back to an object
+                    try {
                         data = JSON.parse(data);
-                        data.Ax.push(update.x);
-                        data.Ay.push(update.y);
-                        data.Az.push(update.z);
-                        data.timestamps.push(update.timestamp);
-                        //save the value to AsyncStorage again
-                        AsyncStorage.setItem('Session', JSON.stringify(data));
-                    }).done();
-            } catch (er) {
-                error(er);
+                        data.Ay.push(this.state.y);
+                        data.Ax.push(this.state.x);
+
+                        data.Az.push(this.state.z);
+                        data.timestamps.push(this.state.timestamp);
+                        data.speeds.push(this.state.speed);
+                    } catch (e) {
+                    }
+                    //save the value to AsyncStorage again
+                    AsyncStorage.setItem(this.props.sess, JSON.stringify(data));
+                }).done();
+        } catch (er) {
+            return;
+        }
+    }
+
+    maybeSetState(update) {
+        if (update.timestamp - this.state.timestamp > 500) {
+            this.setState(update);
+            if (this.props.save) {
+                this.archive();
             }
         } else {
             return;
@@ -56,6 +83,7 @@ class AccValues extends React.Component {
                 <Value name="y" value={this.state.y}/>
                 <Value name="z" value={this.state.z}/>
                 <Value name="ts" value={this.state.timestamp}/>
+                <Value name="speed" value={this.state.speed}/>
             </View>
         );
     }

@@ -1,26 +1,7 @@
 import React, { Component } from 'react';
-import {View, Text, PermissionsAndroid, Dimensions} from 'react-native';
+import {View, Text, PermissionsAndroid, Dimensions, Vibration} from 'react-native';
 import { ProgressChart } from 'react-native-chart-kit';
-
-async function requestLocationPermission() {
-    try {
-        const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-            {
-                'title': 'Location Permission',
-                'message': 'This App needs access to your location ' +
-                    'so we can know where you are.'
-            }
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log("You can use locations ")
-        } else {
-            console.log("Location permission denied")
-        }
-    } catch (err) {
-        console.warn(err)
-    }
-}
+import Speedometer from 'react-native-speedometer-chart';
 
 class Tracker extends Component {
     constructor(props) {
@@ -35,7 +16,6 @@ class Tracker extends Component {
     }
 
     componentDidMount() {
-        requestLocationPermission();
         this.watchId = navigator.geolocation.watchPosition(
             (position) => {
                 this.setState({
@@ -50,9 +30,7 @@ class Tracker extends Component {
         );
     }
 
-    componentWillUnmount() {
-        navigator.geolocation.clearWatch(this.watchId);
-    }
+
 
     render() {
         return (
@@ -60,22 +38,18 @@ class Tracker extends Component {
                 <Text>Latitude: {this.state.latitude}</Text>
                 <Text>Longitude: {this.state.longitude}</Text>
                 <Text>Speed: {this.state.speed}</Text>
-
-                <ProgressChart
-                    data={[this.state.speed / 10]}
-                    width={Dimensions.get('window').width}
-                    height={220}
-                    chartConfig={{
-                    backgroundColor: '#e26a00',
-                    backgroundGradientFrom: '#fb8c00',
-                    backgroundGradientTo: '#ffa726',
-                    decimalPlaces: 2, // optional, defaults to 2dp
-                    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                    style: {
-                        borderRadius: 16
-                    }
-                }}
-
+                <Speedometer
+                    value={this.state.speed}
+                    totalValue={5}
+                    size={250}
+                    outerColor="#d3d3d3"
+                    internalColor="#ff0000"
+                    showIndicator
+                    textStyle={{ color: 'green' }}
+                    showLabels
+                    labelStyle={{ color: 'blue' }}
+                    showPercent
+                    percentStyle={{ color: 'red' }}
                 />
                 <Text>{JSON.stringify(this.state)}</Text>
                 {this.state.error ? <Text>Error: {this.state.error}</Text> : null}
