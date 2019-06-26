@@ -1,5 +1,6 @@
-import {AsyncStorage, Dimensions, Text, View, ScrollView, Picker} from "react-native";
+import {Dimensions, Text, View, ScrollView, Picker, SafeAreaView} from "react-native";
 import s from "./styling";
+import AsyncStorage from '@react-native-community/async-storage';
 import {LineChart} from "react-native-chart-kit";
 import React from 'react';
 import LinearGradient from "react-native-linear-gradient";
@@ -11,46 +12,49 @@ class AnalyticsScreen extends React.Component {
         super(props);
         this.state = {
             sess: 'Session',
+            sessionList: ['Alpha', 'Bravo'],
         };
     }
 
     getSessionList() {
+        let sessList = [];
         try {
             AsyncStorage.getItem('SessionList')
                 .then(data => {
-                    let sessList = (JSON.parse(data).list);
-                    return sessList.map((sessionName) => (
-                        <Picker.Item label='excuse me?' value={sessionName} />
-                    ));
-                }).done();
+                    let ob = JSON.parse(data);
+                    sessList = (ob.list);
+                    return (
+                        <View>
+                            <Picker
+                                style={{height: 50, width: 200}}
+                                mode="dropdown"
+                                selectedValue={this.state.selected}
+                                onValueChange={() => {
+                                }}> //add your function to handle picker state change
+                                {sessList.map((item, index) => {
+                                    return (<Picker.Item label={item} value={index} key={index}/>)
+                                })}
+                            </Picker>
+                        </View>
+                    );
+                });
         } catch (er) {
-            let init = {
-                list: ["Session", "Session2"]
-            };
-            AsyncStorage.setItem('SessionList', JSON.stringify(init))
+            alert("error, failed to get SessionList. " + JSON.stringify(er));
         }
     }
 
     render() {
         return (
-            <LinearGradient
-                start={{x: 0.0, y: 0.25}} end={{x: 0.5, y: 1.0}}
-                colors={['#3760a3', '#328bc3']}
-                style={s.grad}>
-                <ScrollView>
-                    <View>
-                        <Picker
-                            selectedValue={this.state.sess}
-                            style={{height: 50, width: 200}}
-                            onValueChange={(itemValue, itemIndex) =>
-                                this.setState({sess: itemValue})
-                            }>
-                            <Picker.Item label='Session2' value="Session2" />
-                        </Picker>
-                        <AnalyticsChart session={this.state.sess}/>
-                    </View>
-                </ScrollView>
-            </LinearGradient>
+            <SafeAreaView style={s.droidSafeArea}>
+                <View style={s.wrapper}>
+                    <ScrollView>
+                        <View>
+                            {this.getSessionList()}
+                            <AnalyticsChart session={this.state.sess}/>
+                        </View>
+                    </ScrollView>
+                </View>
+            </SafeAreaView>
 
         );
     }

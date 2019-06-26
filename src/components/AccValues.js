@@ -1,5 +1,6 @@
 import {accelerometer} from "react-native-sensors";
-import {AsyncStorage, Dimensions, Text, View, TouchableOpacity} from "react-native";
+import { Dimensions, Text, View, TouchableOpacity} from "react-native";
+import AsyncStorage from '@react-native-community/async-storage';
 import {LineChart} from "react-native-chart-kit";
 import React from 'react';
 import s from './styling';

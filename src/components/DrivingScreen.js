@@ -1,35 +1,64 @@
-import {AsyncStorage, Dimensions, Text, View, TouchableOpacity, Vibration, Alert} from "react-native";
+import {
+    Dimensions,
+    Text,
+    View,
+    TouchableOpacity,
+    Vibration,
+    Alert,
+    SafeAreaView,
+    PermissionsAndroid
+} from "react-native";
+import AsyncStorage from '@react-native-community/async-storage';
 import React from 'react';
 import s from './styling';
 import LinearGradient from "react-native-linear-gradient";
 import AccValues from "./AccValues";
 import Tracker from "./Tracker";
+import {accelerometer} from "react-native-sensors";
 
-// Setting Data in AsyncStorage
-
-// When calling component did mount, use storeItem to store initial time stamp and GPS coordinates
-// Use storeItem when the session has started to store data points, key == timestamp and item == sensor value
-// Lastly, use this function to note the stop timestamp.
-async function storeItem(key, item) {
-    try {
-        //Wait for the Promise returned by AsyncStorage.setItem(), then return value.
-        var jsonOfItem = await AsyncStorage.setItem(key, JSON.stringify(item));
-        return jsonOfItem;
-    } catch (error) {
-        console.log(error.message);
-    }
-}
-
-// Delete all once json created, delete all example code available in Doc.
 class DrivingScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             driving: false,
-            sess: "Alpha"
+            sess: false,
+            Ax: -1,
+            Ay: -1,
+            Az: -1,
+            speed: -1,
+            timestamp: -1,
         };
+        accelerometer.subscribe(({x, y, z, timestamp}) => {
+            if ((timestamp - this.state.timestamp > 500 && this.state.driving) && this.state.sess) {
+                this.setState({
+                    Ax: x,
+                    Ay: y,
+                    Az: z,
+                    timestamp: timestamp
+                });
+                try {
+                    AsyncStorage.getItem(this.state.sess, (error, result) => {
+                        if (error) {
+                            alert(JSON.stringify(error));
+                        }
+                        let res = JSON.parse(result);
+                        try {
+                            res.Ax.push(x);
+                            res.Ay.push(y);
+                            res.Az.push(z);
+                            res.speeds.push(this.state.speed);
+                            AsyncStorage.setItem(this.state.sess, JSON.stringify(res));
+                        }catch (e) {
+                            
+                        }
+                    });
+                }catch (e) {
+                }
+            }
+        });
         this.toggleDriving = this.toggleDriving.bind(this);
     }
+
     addSession(string) {
         try {
             AsyncStorage.getItem('SessionList')
@@ -38,73 +67,83 @@ class DrivingScreen extends React.Component {
                     data = JSON.parse(data);
                     data.list.push(string);
                     AsyncStorage.setItem('SessionList', JSON.stringify(data));
-                    Alert.alert(
-                        'Update',
-                        string + " was added to SessionList.",
-                        [
-                            {text: 'Ask me later', onPress: () => console.log('Ask me later pressed')},
-                            {
-                                text: 'Cancel',
-                                onPress: () => console.log('Cancel Pressed'),
-                                style: 'cancel',
-                            },
-                            {text: 'OK', onPress: () => console.log('OK Pressed')},
-                        ],
-                        {cancelable: false},
-                    );
+                    alert(string + ' was added to SessionList');
+                    AsyncStorage.setItem(string, JSON.stringify({
+                        Ax: [],
+                        Ay: [],
+                        Az: [],
+                        speeds: [],
+                    }))
                 }).done();
+            this.setState({
+                driving: true,
+                sess: string,
+            });
         } catch (er) {
             error(er);
         }
     }
+
     toggleDriving() {
         Vibration.vibrate([1, 100], false);
         if (!this.state.driving) {  //if we're starting to drive!!!!
-            var currentDate = new Date();
+            let currentDate = new Date();
 
-            var date = currentDate.getDate();
-            var month = currentDate.getMonth(); //Be careful! January is 0 not 1
-            var year = currentDate.getFullYear();
+            let date = currentDate.getDate();
+            let month = currentDate.getMonth(); //Be careful! January is 0 not 1
+            let year = currentDate.getFullYear();
             let hour = currentDate.getHours();
             let minute = currentDate.getMinutes();
+            if (minute < 10) {
+                minute = '0' + String(minute);
+            }
+            if (hour < 10) {
+                hour = '0' + String(hour);
+            }
 
-            var dateString = hour + ":" + minute + ' ' + date + "-" + (month + 1) + "-" + year;
+            let dateString = hour + ":" + minute + ' ' + date + "-" + (month + 1) + "-" + year;
             this.addSession(dateString);
-            this.setState({
-                driving: !this.state.driving,
-                sess: dateString
-            });
         } else {
             this.setState({
                 driving: !this.state.driving,
-                sess: this.state.sess
+                sess: this.state.sess,
+                timestamp: this.state.timestamp
             });
         }
 
     }
-    conditionalRender(){
-        if(this.state.driving){
-            return(<AccValues sess={this.state.sess} save={true}/>);
-        }
+
+    componentDidMount() {
+        this.watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                this.setState({
+                    speed: position.coords.speed,
+                })
+            },
+            (error) => this.setState({
+                error: error.message,
+            }),
+            {enableHighAccuracy: false, timeout: 200, maximumAge: 10, distanceFilter: 1},
+        );
+    }
+
+    componentWillUnmount() {
+        navigator.geolocation.clearWatch(this.watchId);
     }
 
     render() {
         return (
-            <LinearGradient
-                start={{x: 0.0, y: 0.25}} end={{x: 0.5, y: 1.0}}
-                colors={['#3760a3', '#328bc3']}
-                style={s.grad}
-            >
-                <TouchableOpacity
-                    style={(this.state.driving) ? s.stop : s.start}
-                    onPress={this.toggleDriving}
-                >
-                    <Text style={s.buttonText}>{(this.state.driving) ? "Stop Driving" : "Start Driving"}</Text>
-                </TouchableOpacity>
-                <Text>{JSON.stringify(this.state)}</Text>
-                {this.conditionalRender()}
-            </LinearGradient>
-
+            <SafeAreaView style={s.droidSafeArea}>
+                <View style={s.wrapper}>
+                    <TouchableOpacity
+                        style={(this.state.driving) ? s.stop : s.start}
+                        onPress={this.toggleDriving}
+                    >
+                        <Text style={s.buttonText}>{(this.state.driving) ? "Stop Driving" : "Start Driving"}</Text>
+                    </TouchableOpacity>
+                    <Text style={s.text}>{JSON.stringify(this.state)}</Text>
+                </View>
+            </SafeAreaView>
         );
     }
 }

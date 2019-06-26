@@ -1,10 +1,21 @@
-import {StyleSheet} from "react-native";
+import {StyleSheet, Platform} from "react-native";
 
 const styles = StyleSheet.create({
+    droidSafeArea: {
+        flex: 1,
+        backgroundColor: "#152d44",
+        paddingTop: Platform.OS === 'android' ? 0 : 0
+    },
     icon:{
         margin: 6,
         flex: 1,
-        color: "rgba(255,214,48,1)",
+        color: "rgb(94,224,250)",
+    },
+    wrapper:{
+        flex: 1,
+        backgroundColor: "rgb(21,45,68)",
+        color: 'white',
+        alignItems: 'center'
     },
     buttonText:{
         flex: 3,
@@ -24,6 +35,14 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         backgroundColor: "rgb(255,26,31)",
         borderRadius: 20
+    },
+    modal:{
+        backgroundColor: 'white',
+        borderRadius: 20,
+        marginTop: 120,
+        marginLeft: 40,
+        marginRight: 40,
+        padding: 20,
     },
     start:{
         paddingTop: 115,
@@ -57,10 +76,12 @@ const styles = StyleSheet.create({
         margin: 30,
         flex: 1,
         width: 300,
+        height: 40,
+        color: 'black',
         flexDirection: 'row',
         justifyContent: "space-around",
         alignItems: "center",
-        backgroundColor: "rgba(55,96,163,1)",
+        backgroundColor: "rgb(61,88,117)",
         borderRadius: 20
     },
     text: {
@@ -69,6 +90,7 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontFamily: "AvenirNext-DemiBold",
         textAlign: "center",
+        color: '#FFFFFF'
     },
     valueContainer: {
         flexDirection: 'row',

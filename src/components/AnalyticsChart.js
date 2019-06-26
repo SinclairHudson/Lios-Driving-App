@@ -1,5 +1,6 @@
-import {AsyncStorage, Dimensions, Text, View, ScrollView, Picker} from "react-native";
+import { Dimensions, Text, View, ScrollView, Picker} from "react-native";
 import s from "./styling";
+import AsyncStorage from '@react-native-community/async-storage';
 import {LineChart} from "react-native-chart-kit";
 import React from 'react';
 import LinearGradient from "react-native-linear-gradient";
@@ -30,10 +31,6 @@ class AnalyticsChart extends React.Component {
 
     render() {
         return (
-            <LinearGradient
-                start={{x: 0.0, y: 0.25}} end={{x: 0.5, y: 1.0}}
-                colors={['#3760a3', '#328bc3']}
-                style={s.grad}>
                 <ScrollView>
                     <View>
                         <Text style={s.chartLabel}>Acceleration</Text>
@@ -100,8 +97,6 @@ class AnalyticsChart extends React.Component {
                             fromZero={true}/>
                     </View>
                 </ScrollView>
-            </LinearGradient>
-
         );
     }
 }
