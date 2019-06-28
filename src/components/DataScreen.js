@@ -54,11 +54,11 @@ class DataScreen extends React.Component {
         return (
             <SafeAreaView style={s.droidSafeArea}>
                 <View style={s.wrapper}>
+                    <Button title="Refresh" onPress={() => {
+                        this.refresh();
+                    }}/>
                     <ScrollView>
                         {this.displayStore()}
-                        <Button title="Refresh" onPress={() => {
-                            this.refresh();
-                        }}/>
                     </ScrollView>
                 </View>
             </SafeAreaView>

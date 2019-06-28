@@ -1,4 +1,4 @@
-import {StyleSheet, Platform} from "react-native";
+import {StyleSheet, Platform, absoluteFillObject} from "react-native";
 
 const styles = StyleSheet.create({
     droidSafeArea: {
@@ -26,16 +26,6 @@ const styles = StyleSheet.create({
         flex:1,
         justifyContent: 'space-around',
     },
-    stop:{
-        paddingTop: 115,
-        margin: 30,
-        flex: 1,
-        width: 300,
-        alignItems: 'center',
-        justifyContent: "center",
-        backgroundColor: "rgb(255,26,31)",
-        borderRadius: 20
-    },
     modal:{
         backgroundColor: 'white',
         borderRadius: 20,
@@ -44,19 +34,36 @@ const styles = StyleSheet.create({
         marginRight: 40,
         padding: 20,
     },
-    start:{
-        paddingTop: 115,
-        margin: 30,
+    stop:{
         flex: 1,
-        width: 300,
+        margin: 10,
+        height: 70,
         alignItems: 'center',
         justifyContent: "center",
-        backgroundColor: "rgb(75,226,27)",
+        backgroundColor: "rgb(61,88,117)",
+        borderRadius: 20
+    },
+    start:{
+        flex: 1,
+        margin: 10,
+        height: 70,
+        alignItems: 'center',
+        justifyContent: "center",
+        backgroundColor: "rgb(94,224,250)",
         borderRadius: 20
     },
     chartLabel:{
         color: 'rgba(255,255,255,0.97)',
         marginLeft: 40,
+    },
+    inDial:{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    kmh:{
+        flex:1,
+        color: "rgba(255,255,255,1)",
     },
     image:{
         paddingLeft: 100,
@@ -66,11 +73,28 @@ const styles = StyleSheet.create({
         height: undefined,
         marginLeft: 20,
     },
+    map: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    bottomDriver:{
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+    },
     grad:{
         flex: 1,
         alignItems: "center",
         justifyContent: "space-around",
         color: "rgba(255,255,255,1)"
+    },
+    dialValue:{
+        flex: 1,
+        alignSelf: 'center',
+        justifyContent: 'center',
+        color: "rgba(255,255,255,1)",
+        fontSize: 40,
+        marginTop: 40,
     },
     button: {
         margin: 30,

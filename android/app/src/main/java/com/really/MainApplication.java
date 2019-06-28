@@ -3,6 +3,7 @@ package com.really;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.airbnb.android.react.maps.MapsPackage;
 import io.github.traviskn.rnuuidgenerator.RNUUIDGeneratorPackage;
 import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 import com.BV.LinearGradient.LinearGradientPackage;
@@ -30,6 +31,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new MapsPackage(),
             new RNUUIDGeneratorPackage(),
             new AsyncStoragePackage(),
             new LinearGradientPackage(),
@@ -56,4 +58,10 @@ public class MainApplication extends Application implements ReactApplication {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
   }
+      protected List<ReactPackage> getPackages() {
+          return Arrays.<ReactPackage>asList(
+                  new MainReactPackage(),
+                  new MapsPackage()
+          );
+      }
 }
