@@ -19,6 +19,8 @@ import AccValues from "./AccValues";
 import Tracker from "./Tracker";
 import {accelerometer} from "react-native-sensors";
 import MapView, {OverlayComponent} from 'react-native-maps';
+import { NavigationEvents } from 'react-navigation';
+
 
 
 let mapStyle = [
@@ -305,6 +307,7 @@ class DrivingScreen extends React.Component {
         this.toggleDriving = this.toggleDriving.bind(this);
         this.sendCurrentSession = this.sendCurrentSession.bind(this);
         this.directions = this.directions.bind(this);
+        this.updateCarList = this.updateCarList.bind(this);
     }
 
     addSession() {
@@ -380,6 +383,7 @@ class DrivingScreen extends React.Component {
             }
             let pack = JSON.parse(res);
             pack.stoptimestamp = this.state.timestamp;
+            pack.car = this.state.currentCar;
             try {
                 fetch('https://ne6nmf3qcf.execute-api.us-east-1.amazonaws.com/dev/sessionData', {
                     method: 'POST',
@@ -419,7 +423,15 @@ class DrivingScreen extends React.Component {
             }
         });
     }
-
+    updateCarList() {
+        AsyncStorage.getItem('CarList', (err, res) => {
+            if (err) {
+                alert(JSON.stringify(err));
+            }
+            let data = JSON.parse(res);
+            this.setState({vehicles: data.list})
+        });
+    }
     componentDidMount() {
         AsyncStorage.getItem('CarList', (err, res) => {
             if (err) {
@@ -451,6 +463,9 @@ class DrivingScreen extends React.Component {
         let kmh = Math.round(this.state.speed * 100.6);
         return (
             <SafeAreaView style={s.droidSafeArea}>
+                <NavigationEvents
+                    onWillFocus={payload => this.updateCarList()}
+                />
                 <View style={s.wrapper}>
                     <MapView
                         initialRegion={{

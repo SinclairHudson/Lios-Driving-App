@@ -27,7 +27,6 @@ class SettingsScreen extends React.Component {
             vehicles: ['Charlie', "Delta"],
             modalVisible: false,
             textInput: "Lamborghini",
-            currentCar: 'Charlie'
         };
         this.save = this.save.bind(this);
         this.setModalVisible = this.setModalVisible.bind(this);
@@ -38,8 +37,6 @@ class SettingsScreen extends React.Component {
 
     save() {
         AsyncStorage.setItem('CarList', JSON.stringify({list: this.state.vehicles}));
-        AsyncStorage.mergeItem('Options', JSON.stringify({currentCar: this.state.currentCar}));
-
         this.props.navigation.navigate("Home");
     }
 
@@ -56,7 +53,7 @@ class SettingsScreen extends React.Component {
             return (
                 <View key={index} style={s.listCar}>
                     <Text style={s.text}>
-                        {item}
+                        {item}                      
                     </Text>
                     <Text style={s.text}>
                         {index}
@@ -155,21 +152,6 @@ class SettingsScreen extends React.Component {
                             <Text style={s.buttonText}>Add Vehicle</Text>
                         </TouchableOpacity>
                     </ScrollView>
-                    <View style={{flex: 1}}>
-                        <Text style={s.text}>
-                            {JSON.stringify(this.state)}
-                        </Text>
-                    </View>
-                    <TouchableOpacity
-                        onPress={()=>{
-                            this.setState({ vehicles: this.state.vehicles.slice(0, 1).concat(this.state.vehicles.slice(2))});
-                        }}>
-                        <Icon
-                            name="delete"
-                            type="material"
-                            color='#5EE0FA'
-                        />
-                    </TouchableOpacity>
                 </View>
             </SafeAreaView>
         );
