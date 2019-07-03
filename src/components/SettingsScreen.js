@@ -8,7 +8,9 @@ import {
     TouchableHighlight,
     TouchableOpacity,
     TextInput,
-    SafeAreaView
+    SafeAreaView,
+    ScrollView,
+    Alert
 } from "react-native";
 import {LineChart} from "react-native-chart-kit";
 import React from 'react';
@@ -22,30 +24,76 @@ class SettingsScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            vehicle: "suv",
+            vehicles: ['Charlie', "Delta"],
             modalVisible: false,
             textInput: "Lamborghini",
+            currentCar: 'Charlie'
         };
+        this.save = this.save.bind(this);
+        this.setModalVisible = this.setModalVisible.bind(this);
+        this.newCar = this.newCar.bind(this);
+        this.listImages = this.listImages.bind(this);
+
     }
 
-    setModalVisible(visible) {
-        this.setState({modalVisible: visible});
+    save() {
+        AsyncStorage.setItem('CarList', JSON.stringify({list: this.state.vehicles}));
+        AsyncStorage.mergeItem('Options', JSON.stringify({currentCar: this.state.currentCar}));
+
+        this.props.navigation.navigate("Home");
+    }
+
+    newCar() {
+        this.state.vehicles.push(this.state.textInput);
+        this.setState({
+            currentCar: this.state.textInput
+        });
+        this.setModalVisible();
+    }
+
+    listImages() {
+        return this.state.vehicles.map((item, index) => {
+            return (
+                <View key={index} style={s.listCar}>
+                    <Text style={s.text}>
+                        {item}
+                    </Text>
+                    <Text style={s.text}>
+                        {index}
+                    </Text>
+                    <TouchableOpacity
+                        onPress={()=>{
+                        this.setState({ vehicles: this.state.vehicles.slice(0, index).concat(this.state.vehicles.slice(index+1))});
+                    }}>
+                        <Icon
+                            name="delete"
+                            type="material"
+                            color='#5EE0FA'
+                        />
+                    </TouchableOpacity>
+                </View>
+            );
+        });
+    }
+
+    setModalVisible() {
+        this.setState({modalVisible: !this.state.modalVisible});
+    }
+
+    componentDidMount() {
+        AsyncStorage.getItem('CarList', (err, res) => {
+            if (err) {
+                alert(JSON.stringify(err));
+            }
+            let data = JSON.parse(res);
+            this.setState({vehicles: data.list})
+        });
     }
 
     render() {
         return (
             <SafeAreaView style={s.droidSafeArea}>
                 <View style={s.wrapper}>
-                    <Picker
-                        selectedValue={this.state.vehicle}
-                        style={{height: 50, width: 200}}
-                        onValueChange={(itemValue, itemIndex) =>
-                            this.setState({vehicle: itemValue})
-                        }>
-                        <Picker.Item label="SUV" value="suv"/>
-                        <Picker.Item label="Dodge Grand Caravan" value="minivan"/>
-                        <Picker.Item label="Jeep" value="jeep"/>
-                    </Picker>
                     <Modal
                         animationType="slide"
                         transparent={true}
@@ -54,65 +102,73 @@ class SettingsScreen extends React.Component {
                             Alert.alert('Modal has been closed.');
                         }}>
                         <View style={s.modal}>
-                            <View>
-                                <Text>Add a new car</Text>
-                                <TextInput
-                                    style={{height: 40, borderColor: 'gray', borderWidth: 1}}
-                                    onChangeText={(text) => this.setState({textInput: text})}
-                                    value={this.state.textInput}
-                                />
-                                <View style={s.buttons}>
-                                    <TouchableOpacity
-                                        style={s.button}
-                                        onPress={() => {
-                                            this.setModalVisible(false)
-                                        }}>
-                                        <View style={s.icon}>
-                                            <Icon
-                                                name='timeline'
-                                                type='material'
-                                                color='#FFD630'
-                                            />
-                                        </View>
-                                        <Text style={s.buttonText}>Save</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={s.button}
-                                        onPress={() => {
-                                            this.setModalVisible(false)
-                                        }}>
-                                        <View style={s.icon}>
-                                            <Icon
-                                                name='timeline'
-                                                type='material'
-                                                color='#FFD630'
-                                            />
-                                            <Text style={s.buttonText}>Cancel</Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                </View>
-                                <TouchableHighlight
-                                    onPress={() => {
-                                        this.setModalVisible(!this.state.modalVisible);
-                                    }}>
+                            <Text>Add a new car</Text>
+                            <TextInput
+                                style={{
+                                    height: 40,
+                                    borderColor: 'gray',
+                                    borderWidth: 1,
+                                    marginBottom: 40,
+                                    marginTop: 40
+                                }}
+                                onChangeText={(text) => this.setState({textInput: text})}
+                                value={this.state.textInput}
+                            />
+                            <View style={s.saveCancel}>
+                                <TouchableOpacity style={[s.button, {backgroundColor: "rgb(94,224,250)"}]}
+                                                  onPress={this.newCar}>
                                     <Text>Save</Text>
-                                </TouchableHighlight>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[s.button, {backgroundColor: "rgb(247,245,250)"}]}
+                                                  onPress={this.setModalVisible}>
+                                    <Text>Cancel</Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </Modal>
+                    <View style={s.saveCancel}>
+                        <TouchableOpacity style={[s.button, {backgroundColor: "rgb(94,224,250)"}]}
+                                          onPress={this.save}>
+                            <Text>Save</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[s.button, {backgroundColor: "rgb(247,245,250)"}]}
+                                          onPress={() => {
+                                              this.props.navigation.navigate("Home");
+                                          }}>
+                            <Text>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView style={{flex: 4}}>
+                        {this.listImages()}
+                        <TouchableOpacity
+                            style={[s.button, {height: 30}]}
+                            onPress={() => {
+                                this.setModalVisible(true);
+                            }}>
+                            <View style={s.icon}>
+                                <Icon
+                                    name="add"
+                                    type="material"
+                                    color='#5EE0FA'
+                                />
+                            </View>
+                            <Text style={s.buttonText}>Add Vehicle</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                    <View style={{flex: 1}}>
+                        <Text style={s.text}>
+                            {JSON.stringify(this.state)}
+                        </Text>
+                    </View>
                     <TouchableOpacity
-                        style={[s.button, {height: 30}]}
-                        onPress={() => {
-                            this.setModalVisible(true);
+                        onPress={()=>{
+                            this.setState({ vehicles: this.state.vehicles.slice(0, 1).concat(this.state.vehicles.slice(2))});
                         }}>
-                        <View style={s.icon}>
-                            <Icon
-                                name="car"
-                                type="font-awesome"
-                                color='#FFD630'
-                            />
-                        </View>
-                        <Text style={s.buttonText}>Add Vehicle</Text>
+                        <Icon
+                            name="delete"
+                            type="material"
+                            color='#5EE0FA'
+                        />
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>

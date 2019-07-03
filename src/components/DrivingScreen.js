@@ -7,7 +7,7 @@ import {
     Alert,
     SafeAreaView,
     PermissionsAndroid,
-    Button,
+    Button, Picker,
 } from "react-native";
 import AsyncStorage from '@react-native-community/async-storage';
 import React from 'react';
@@ -18,7 +18,7 @@ import LinearGradient from "react-native-linear-gradient";
 import AccValues from "./AccValues";
 import Tracker from "./Tracker";
 import {accelerometer} from "react-native-sensors";
-import MapView from 'react-native-maps';
+import MapView, {OverlayComponent} from 'react-native-maps';
 
 
 let mapStyle = [
@@ -255,12 +255,15 @@ let mapStyle = [
     }
 ];
 let GOOGLE_MAPS_APIKEY = 'AIzaSyBOxltbqEmdl2WW-mg96uHSTGzWSEy_yzM';
+
 class DrivingScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             driving: false,
             sess: 'defined',
+            vehicles: ['Charlie', "Delta"],
+            currentCar: 'Charlie',
             Ax: -1,
             Ay: -1,
             Az: -1,
@@ -301,6 +304,7 @@ class DrivingScreen extends React.Component {
         });
         this.toggleDriving = this.toggleDriving.bind(this);
         this.sendCurrentSession = this.sendCurrentSession.bind(this);
+        this.directions = this.directions.bind(this);
     }
 
     addSession() {
@@ -335,25 +339,30 @@ class DrivingScreen extends React.Component {
         }
     }
 
+    directions() {
+        if (this.state.latitude === 0) {
+            return;
+        } else {
+            return (
+                <MapViewDirections
+                    origin={this.state}
+                    destination={{
+                        latitude: 43.476536,
+                        longitude: -80.539197,
+                    }}
+                    apikey={GOOGLE_MAPS_APIKEY}
+                    strokeWidth={3}
+                    strokeColor={'hotpink'}
+                />
+            );
+        }
+
+    }
+
     toggleDriving() {
         Vibration.vibrate([1, 100], false);
         if (!this.state.driving) {  //if we're starting to drive!!!!
-            let currentDate = new Date();
-
-            let date = currentDate.getDate();
-            let month = currentDate.getMonth(); //Be careful! January is 0 not 1
-            let year = currentDate.getFullYear();
-            let hour = currentDate.getHours();
-            let minute = currentDate.getMinutes();
-            if (minute < 10) {
-                minute = '0' + String(minute);
-            }
-            if (hour < 10) {
-                hour = '0' + String(hour);
-            }
-
-            let dateString = hour + ":" + minute + ' ' + date + "-" + (month + 1) + "-" + year;
-            this.addSession(dateString);
+            this.addSession();
         } else {
             this.setState({
                 driving: !this.state.driving,
@@ -385,7 +394,21 @@ class DrivingScreen extends React.Component {
                             if (err) {
                                 alert(JSON.stringify(err));
                             }
-                            alert("session pushed and deleted.")
+                            AsyncStorage.getItem("SessionList", (err, res) => {
+                                if (err) {
+                                    alert(JSON.stringify(err));
+                                }
+                                let a = JSON.parse(res).list;
+                                if (a.length > 7) {
+                                    a.shift();
+                                }
+                                AsyncStorage.setItem("SessionList", JSON.stringify({list: a}), (err, res) => {
+                                    if (err) {
+                                        alert(JSON.stringify(err));
+                                    }
+                                    alert("session pushed and deleted, sessionList shifted.")
+                                });
+                            });
                         });
                     } else {
                         alert("failed to send session data to database: " + JSON.stringify(response));
@@ -398,6 +421,13 @@ class DrivingScreen extends React.Component {
     }
 
     componentDidMount() {
+        AsyncStorage.getItem('CarList', (err, res) => {
+            if (err) {
+                alert(JSON.stringify(err));
+            }
+            let data = JSON.parse(res);
+            this.setState({vehicles: data.list})
+        });
         this.watchId = navigator.geolocation.watchPosition(
             (position) => {
                 this.setState({
@@ -432,16 +462,7 @@ class DrivingScreen extends React.Component {
                         customMapStyle={mapStyle}
                         style={s.map}
                     >
-                        <MapViewDirections
-                            origin={this.state}
-                            destination={{
-                                latitude: 43.476536,
-                                longitude: -80.539197,
-                            }}
-                            apikey={GOOGLE_MAPS_APIKEY}
-                            strokeWidth={3}
-                            strokeColor={'hotpink'}
-                        />
+                        {this.directions()}
                     </MapView>
                     <View style={s.bottomDriver}>
                         {/*
@@ -465,14 +486,27 @@ class DrivingScreen extends React.Component {
                             }
                         </AnimatedCircularProgress>
                         */}
+                        <Picker
+                            selectedValue={this.state.currentCar}
+                            style={{height: 50, width: 200, color: '#FFFFFF', fontSize: 22,}}
+                            onValueChange={(itemValue, itemIndex) =>
+                                this.setState({currentCar: itemValue})
+                            }>
+                            {this.state.vehicles.map((item, index) => {
+                                return (<Picker.Item style={{color: '#FFFFFF', fontSize: 22,}} label={item} value={item}
+                                                     key={index}/>)
+                            })}
+                        </Picker>
                         <TouchableOpacity
                             style={(this.state.driving) ? s.stop : s.start}
                             onPress={this.toggleDriving}
                         >
-                            <Text style={s.buttonText}>{(this.state.driving) ? "Stop Driving" : "Start Driving"}</Text>
+                            <Text style={{
+                                fontSize: 25,
+                                color: "rgba(255,255,255,1)"
+                            }}>{(this.state.driving) ? "Stop Driving" : "Start Driving"}</Text>
                         </TouchableOpacity>
                     </View>
-
                 </View>
             </SafeAreaView>
         );

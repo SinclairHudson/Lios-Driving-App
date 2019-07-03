@@ -33,6 +33,8 @@ class HomeScreen extends React.Component {
         //check to see if SessionList exists in the store
         let good = false;
         let good2 = false;
+        let good3 = false;
+        let good4 = false;
         AsyncStorage.getAllKeys((err, keys) => {
             AsyncStorage.multiGet(keys, (err, stores) => {
                 stores.map((result, i, store) => {
@@ -44,14 +46,26 @@ class HomeScreen extends React.Component {
                     if (key === 'UserId') {
                         good2 = true;
                     }
+                    if (key === 'CarList') {
+                        good3 = true;
+                    }
+                    if (key === 'Options') {
+                        good4 = true;
+                    }
                 });
                 if (!good) {    // if SessionList is not in the store, add it with empty.
                     AsyncStorage.setItem('SessionList', JSON.stringify({list: ['Alpha', 'Beta']}));
                 }
-                if (!good) {    // if UserId is not in the store, add it with empty.
+                if (!good2) {    // if UserId is not in the store, add it with empty.
                     UUIDGenerator.getRandomUUID((uuid) => {
                         AsyncStorage.setItem('UserId', uuid)
                     });
+                }
+                if (!good3) {    // if SessionList is not in the store, add it with empty.
+                    AsyncStorage.setItem('CarList', JSON.stringify({list: ['Lamborghini', 'Ferrari']}));
+                }
+                if (!good4) {    // if SessionList is not in the store, add it with empty.
+                    AsyncStorage.setItem('Options', JSON.stringify({currentCar: 'Ferrari'}));
                 }
             });
         });

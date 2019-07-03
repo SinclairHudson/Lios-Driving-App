@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
         marginTop: 120,
         marginLeft: 40,
         marginRight: 40,
-        padding: 20,
+        padding: 40,
     },
     stop:{
         flex: 1,
@@ -79,8 +79,9 @@ const styles = StyleSheet.create({
     bottomDriver:{
         flex: 1,
         flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'flex-end',
+        alignItems: 'center',
+        position: 'absolute',
+        backgroundColor: "rgb(21,45,68)",
     },
     grad:{
         flex: 1,
@@ -107,6 +108,16 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: "rgb(61,88,117)",
         borderRadius: 20
+    },
+    saveCancel:{
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    listCar:{
+        flex: 1,
+        margin: 20,
+        flexDirection: 'row',
+        alignContent: 'space-around',
     },
     text: {
         flex: 1,
