@@ -1,13 +1,23 @@
 import {Image, Text, TouchableOpacity, View, Picker, Alert, SafeAreaView, PermissionsAndroid} from "react-native";
-import {withNavigation} from 'react-navigation';
+import {NavigationEvents, withNavigation} from 'react-navigation';
 import AsyncStorage from '@react-native-community/async-storage';
 import s from "./styling";
 import {Icon} from 'react-native-elements'
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 import UUIDGenerator from 'react-native-uuid-generator';
+import {AnimatedCircularProgress} from 'react-native-circular-progress';
+
 
 class HomeScreen extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            scores: [],
+            avgScore: 0,
+        }
+    }
+
     async requestLocationPermission() {
         try {
             const granted = await PermissionsAndroid.request(
@@ -27,7 +37,7 @@ class HomeScreen extends React.Component {
             console.warn(err)
         }
     }
-    
+
     componentDidMount() {
         this.requestLocationPermission();
         //check to see if SessionList exists in the store
@@ -69,16 +79,106 @@ class HomeScreen extends React.Component {
                 }
             });
         });
+        this.getScores();
+    }
+
+    async getScores() {
+        fetch('https://ne6nmf3qcf.execute-api.us-east-1.amazonaws.com/dev/userData?userID=' + await AsyncStorage.getItem("UserId"))
+            .then((response) => response.json())
+            .then((responseJson) => {
+                //alert(JSON.stringify(responseJson));
+                this.setState({scores: responseJson.sessionScores, avgScore: Math.round(responseJson.userScore)});
+            })
+            .catch((error) => {
+                // alert("oof");
+                alert(JSON.stringify(error));
+            });
     }
 
     render() {
         return (
             <SafeAreaView style={s.droidSafeArea}>
+                <NavigationEvents
+                    onWillFocus={payload => this.getScores()}
+                />
                 <View style={s.wrapper}>
-                    <Image
-                        source={require("../assets/LiosLogo.png")}
-                        style={s.image}
-                    />
+                    <View style={s.circleWrapper}>
+                        <AnimatedCircularProgress
+                            size={300}
+                            width={10}
+                            fill={this.state.avgScore}
+                            tintColor={(this.state.avgScore > 100) ? "#FFFFFF" : "#5ee0fa"}
+                            backgroundColor={(this.state.avgScore > 100) ? "#5ee0fa" : "#3d5875"}>
+                            {
+                                (fill) => (
+                                    <View style={s.inDial}>
+                                        <View style={s.dialValue}>
+                                            <Text style={s.dialValueText}>
+                                                {this.state.avgScore}
+                                            </Text>
+                                        </View>
+                                        <View style={s.kmh}>
+                                            <Text style={s.kmhText}>
+                                                CURRENT SCORE
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )
+                            }
+                        </AnimatedCircularProgress>
+                    </View>
+                    <View style={s.twoCircleWrapper}>
+                        <View style={s.circleWrapper}>
+                            <AnimatedCircularProgress
+                                size={100}
+                                width={5}
+                                fill={this.state.avgScore}
+                                tintColor={(this.state.avgScore > 100) ? "#FFFFFF" : "#5ee0fa"}
+                                backgroundColor={(this.state.avgScore > 100) ? "#5ee0fa" : "#3d5875"}>
+                                {
+                                    (fill) => (
+                                        <View style={s.inDial}>
+                                            <View style={s.smallDialValue}>
+                                                <Text style={s.smallDialValueText}>
+                                                    {this.state.avgScore}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    )
+                                }
+                            </AnimatedCircularProgress>
+                            <Text style={s.kmhText}>
+                                LAST SESSION
+                            </Text>
+                        </View>
+                        <View style={s.circleWrapper}>
+                            <AnimatedCircularProgress
+                                size={100}
+                                width={5}
+                                fill={this.state.avgScore}
+                                tintColor={(this.state.avgScore > 100) ? "#FFFFFF" : "#5ee0fa"}
+                                backgroundColor={(this.state.avgScore > 100) ? "#5ee0fa" : "#3d5875"}>
+                                {
+                                    (fill) => (
+                                        <View style={s.inDial}>
+                                            <View style={s.smallDialValue}>
+                                                <Text style={s.smallDialValueText}>
+                                                    {this.state.avgScore}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    )
+                                }
+                            </AnimatedCircularProgress>
+                            <Text style={s.kmhText}>
+                                PAST 7 SCORES
+                            </Text>
+                        </View>
+                    </View>
+                    {/*<Image*/}
+                    {/*    source={require("../assets/LiosLogo.png")}*/}
+                    {/*    style={s.image}*/}
+                    {/*/>*/}
                     <View style={s.buttons}>
                         <TouchableOpacity
                             style={s.button}
@@ -93,31 +193,6 @@ class HomeScreen extends React.Component {
                                 />
                             </View>
                             <Text style={s.buttonText}>DRIVE</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={s.button}
-                            onPress={() => {
-                                AsyncStorage.getAllKeys((err, keys) => {
-                                    AsyncStorage.multiGet(keys, (err, stores) => {
-                                        stores.map((result, i, store) => {
-                                            // get at each store's key/value so you can work with it
-                                            let key = store[i][0];
-                                            if (key !== 'SessionList' && key !== 'UserId') {    //if it's not an important one
-                                                AsyncStorage.removeItem(key);
-                                            }
-                                            AsyncStorage.setItem('SessionList', JSON.stringify({list: ['Alpha']}));
-                                        });
-                                    });
-                                });
-                            }}>
-                            <View style={s.icon}>
-                                <Icon
-                                    name="drive-eta"
-                                    type="material"
-                                    color='#5EE0FA'
-                                />
-                            </View>
-                            <Text style={s.buttonText}>CLEAR ASYNC</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={s.button}

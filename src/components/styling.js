@@ -61,8 +61,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    circleWrapper:{
+        flex:0.8,
+        margin: 30,
+    },
+    twoCircleWrapper:{
+        flex:0.8,
+        flexDirection: 'row',
+        margin: 30,
+        justifyContent: 'space-around',
+    },
     kmh:{
         flex:1,
+        color: "rgba(255,255,255,1)",
+    },
+    kmhText:{
         color: "rgba(255,255,255,1)",
     },
     image:{
@@ -94,8 +107,24 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         justifyContent: 'center',
         color: "rgba(255,255,255,1)",
+        fontSize: 100,
+        marginTop: 70,
+    },
+    smallDialValue:{
+        flex: 1,
+        alignSelf: 'center',
+        justifyContent: 'center',
+        color: "rgba(255,255,255,1)",
         fontSize: 40,
-        marginTop: 40,
+        marginTop: 3,
+    },
+    dialValueText:{
+        color: "rgba(255,255,255,1)",
+        fontSize: 100,
+    },
+    smallDialValueText:{
+        color: "rgba(255,255,255,1)",
+        fontSize: 40,
     },
     button: {
         margin: 30,

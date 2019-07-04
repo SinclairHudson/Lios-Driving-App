@@ -60,6 +60,31 @@ class DataScreen extends React.Component {
                     <ScrollView>
                         {this.displayStore()}
                     </ScrollView>
+                    <TouchableOpacity
+                        style={s.button}
+                        onPress={() => {
+                            AsyncStorage.getAllKeys((err, keys) => {
+                                AsyncStorage.multiGet(keys, (err, stores) => {
+                                    stores.map((result, i, store) => {
+                                        // get at each store's key/value so you can work with it
+                                        let key = store[i][0];
+                                        if (key !== 'SessionList' && key !== 'UserId') {    //if it's not an important one
+                                            AsyncStorage.removeItem(key);
+                                        }
+                                        AsyncStorage.setItem('SessionList', JSON.stringify({list: ['Alpha']}));
+                                    });
+                                });
+                            });
+                        }}>
+                        <View style={s.icon}>
+                            <Icon
+                                name="drive-eta"
+                                type="material"
+                                color='#5EE0FA'
+                            />
+                        </View>
+                        <Text style={s.buttonText}>CLEAR ASYNC</Text>
+                    </TouchableOpacity>
                 </View>
             </SafeAreaView>
         );
