@@ -10,7 +10,7 @@ class DataScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            list:[]
+            list: []
         };
     }
 
@@ -54,37 +54,45 @@ class DataScreen extends React.Component {
         return (
             <SafeAreaView style={s.droidSafeArea}>
                 <View style={s.wrapper}>
-                    <Button title="Refresh" onPress={() => {
-                        this.refresh();
-                    }}/>
-                    <ScrollView>
-                        {this.displayStore()}
-                    </ScrollView>
-                    <TouchableOpacity
-                        style={s.button}
-                        onPress={() => {
-                            AsyncStorage.getAllKeys((err, keys) => {
-                                AsyncStorage.multiGet(keys, (err, stores) => {
-                                    stores.map((result, i, store) => {
-                                        // get at each store's key/value so you can work with it
-                                        let key = store[i][0];
-                                        if (key !== 'SessionList' && key !== 'UserId') {    //if it's not an important one
-                                            AsyncStorage.removeItem(key);
-                                        }
+                    <View style={s.buttons}>
+                        <Button title="Refresh" onPress={() => {
+                            this.refresh();
+                        }}/>
+                    </View>
+                    <View style={s.buttons}>
+                        <TouchableOpacity
+                            style={s.button}
+                            onPress={() => {
+                                AsyncStorage.getAllKeys((err, keys) => {
+                                    AsyncStorage.multiGet(keys, (err, stores) => {
+                                        stores.map((result, i, store) => {
+                                            // get at each store's key/value so you can work with it
+                                            let key = store[i][0];
+                                            if (key !== 'UserId') {    //if it's not an important one
+                                                AsyncStorage.removeItem(key);
+                                            }
+                                        });
                                         AsyncStorage.setItem('SessionList', JSON.stringify({list: ['Alpha']}));
+                                        AsyncStorage.setItem('CarList', JSON.stringify({list: ['McQueen']}));
+                                        AsyncStorage.setItem('currentCar', "McQueen");
                                     });
                                 });
-                            });
-                        }}>
-                        <View style={s.icon}>
-                            <Icon
-                                name="drive-eta"
-                                type="material"
-                                color='#5EE0FA'
-                            />
-                        </View>
-                        <Text style={s.buttonText}>CLEAR ASYNC</Text>
-                    </TouchableOpacity>
+                            }}>
+                            <View style={s.icon}>
+                                <Icon
+                                    name="drive-eta"
+                                    type="material"
+                                    color='#5EE0FA'
+                                />
+                            </View>
+                            <Text style={s.buttonText}>CLEAR ASYNC</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={s.buttons}>
+                        <ScrollView>
+                            {this.displayStore()}
+                        </ScrollView>
+                    </View>
                 </View>
             </SafeAreaView>
         );

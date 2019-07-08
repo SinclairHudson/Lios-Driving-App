@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
         color: "rgba(255,255,255,1)",
     },
     buttons:{
-        flex:1,
+        flex: 1,
         justifyContent: 'space-around',
     },
     modal:{
@@ -61,14 +61,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    largeCircleWrapper:{
+        flex: 3,
+        marginTop: 45,
+    },
+    circleLabel:{
+        marginTop: 15,
+    },
     circleWrapper:{
-        flex:0.8,
-        margin: 30,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     twoCircleWrapper:{
-        flex:0.8,
+        flex:2,
         flexDirection: 'row',
-        margin: 30,
         justifyContent: 'space-around',
     },
     kmh:{
@@ -124,7 +131,7 @@ const styles = StyleSheet.create({
     },
     smallDialValueText:{
         color: "rgba(255,255,255,1)",
-        fontSize: 40,
+        fontSize: 50,
     },
     button: {
         margin: 30,

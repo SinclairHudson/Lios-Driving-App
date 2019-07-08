@@ -19,8 +19,7 @@ import AccValues from "./AccValues";
 import Tracker from "./Tracker";
 import {accelerometer} from "react-native-sensors";
 import MapView, {OverlayComponent} from 'react-native-maps';
-import { NavigationEvents } from 'react-navigation';
-
+import {NavigationEvents} from 'react-navigation';
 
 
 let mapStyle = [
@@ -304,6 +303,7 @@ class DrivingScreen extends React.Component {
                 }
             }
         });
+        //binding this in functions to mean the DrivingScreen, not the Component that calls them.
         this.toggleDriving = this.toggleDriving.bind(this);
         this.sendCurrentSession = this.sendCurrentSession.bind(this);
         this.directions = this.directions.bind(this);
@@ -342,6 +342,7 @@ class DrivingScreen extends React.Component {
         }
     }
 
+    //directions returns the object that overlays the Google map View, tracing a line from the origin to the destination.
     directions() {
         if (this.state.latitude === 0) {
             return;
@@ -363,6 +364,7 @@ class DrivingScreen extends React.Component {
     }
 
     toggleDriving() {
+        //small vibration for feedback to the user.
         Vibration.vibrate([1, 100], false);
         if (!this.state.driving) {  //if we're starting to drive!!!!
             this.addSession();
@@ -372,19 +374,24 @@ class DrivingScreen extends React.Component {
                 sess: this.state.sess,
                 timestamp: this.state.timestamp
             });
+            //send all the data that we just collected to the backend.
             this.sendCurrentSession();
         }
     }
 
     sendCurrentSession() {
+        //get all the current session data from AsyncStorage
         AsyncStorage.getItem(this.state.sess, (err, res) => {
             if (err) {
                 alert(JSON.stringify(err));
             }
+            //create the final package object to be sent to the backend.
             let pack = JSON.parse(res);
+            //set the final timestamp
             pack.stoptimestamp = this.state.timestamp;
             pack.car = this.state.currentCar;
             try {
+                //fetch API to POST the data of the session to the backend.
                 fetch('https://ne6nmf3qcf.execute-api.us-east-1.amazonaws.com/dev/sessionData', {
                     method: 'POST',
                     headers: {
@@ -392,37 +399,50 @@ class DrivingScreen extends React.Component {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(pack),
-                }).then((response) => {
+                }).then((response) => {   //wait for a response
                     if (response.status === 200) {
+                        //if the status is 200, so the data was successfully received, then we can delete the
+                        //local data of the session.
                         AsyncStorage.removeItem(this.state.sess, (err, res) => {
                             if (err) {
                                 alert(JSON.stringify(err));
                             }
+                            //remove the entry for the session, and when that's done, modify the sessionList
                             AsyncStorage.getItem("SessionList", (err, res) => {
                                 if (err) {
                                     alert(JSON.stringify(err));
                                 }
+                                //parse the session list, and cut it so that the length is seven.
+                                //This is arbitrary, but currently the backend only holds analytics on the last seven
+                                //Trips, so the frontend only needs to worry about remembering the last seven.
                                 let a = JSON.parse(res).list;
                                 if (a.length > 7) {
-                                    a.shift();
+                                    a.shift(); //mutate the list, don't need to create a new one.
                                 }
+                                //save the SessionList
                                 AsyncStorage.setItem("SessionList", JSON.stringify({list: a}), (err, res) => {
                                     if (err) {
                                         alert(JSON.stringify(err));
                                     }
+                                    //If all goes according to plan, alert saying that the push was successful.
                                     alert("session pushed and deleted, sessionList shifted.")
                                 });
                             });
                         });
                     } else {
+                        //if the initial post was not successful, alert with the error message sent by the backend.
                         alert("failed to send session data to database: " + JSON.stringify(response));
                     }
                 });
             } catch (e) {
+                //catch any errors if something goes wrong, and alert the user.
                 alert(JSON.stringify(e));
             }
         });
     }
+
+    //updateCarList is called whenever the user navigates to the DrivingScreen, to make sure that we have the most
+    //updated list of cars for the user to choose from.
     updateCarList() {
         AsyncStorage.getItem('CarList', (err, res) => {
             if (err) {
@@ -432,14 +452,10 @@ class DrivingScreen extends React.Component {
             this.setState({vehicles: data.list})
         });
     }
+
     componentDidMount() {
-        AsyncStorage.getItem('CarList', (err, res) => {
-            if (err) {
-                alert(JSON.stringify(err));
-            }
-            let data = JSON.parse(res);
-            this.setState({vehicles: data.list})
-        });
+        this.updateCarList();
+        //start streaming the GPS data to the state. the state updates every time geolocation gets new info.
         this.watchId = navigator.geolocation.watchPosition(
             (position) => {
                 this.setState({
@@ -448,27 +464,31 @@ class DrivingScreen extends React.Component {
                     latitude: position.coords.latitude
                 })
             },
-            (error) => this.setState({
-                error: error.message,
-            }),
-            {enableHighAccuracy: true, timeout: 200, maximumAge: 10, distanceFilter: 1},
+            (error) => {
+                this.setState({
+                    error: error.message,
+                });
+                alert(JSON.stringify(error));   //alert the error
+            },
+            //high accuracy only seems to work outside..
+            {enableHighAccuracy: true, timeout: 200, maximumAge: 10, distanceFilter: 1}
         );
     }
 
-    componentWillUnmount() {
+    componentWillUnmount() {   //stop using GPS services, to not stalk users.
         navigator.geolocation.clearWatch(this.watchId);
     }
 
     render() {
-        let kmh = Math.round(this.state.speed * 100.6);
         return (
+            // SafeAreaVew is supposed to allow the app to operate in the space beside the notch on top of phones.
             <SafeAreaView style={s.droidSafeArea}>
                 <NavigationEvents
-                    onWillFocus={payload => this.updateCarList()}
+                    onWillFocus={() => this.updateCarList()}
                 />
                 <View style={s.wrapper}>
                     <MapView
-                        initialRegion={{
+                        initialRegion={{   //set initial coordinates to the Tannery Building in Downtown Kitchener, Ontario, Canada
                             latitude: 43.450901,
                             longitude: -80.498454,
                             latitudeDelta: 0.0922,
@@ -480,38 +500,20 @@ class DrivingScreen extends React.Component {
                         {this.directions()}
                     </MapView>
                     <View style={s.bottomDriver}>
-                        {/*
-                        <AnimatedCircularProgress
-                            size={60}
-                            width={5}
-                            fill={kmh}
-                            tintColor={(kmh > 100) ? "#FFFFFF" : "#5ee0fa"}
-                            backgroundColor={(kmh > 100) ? "#5ee0fa" : "#3d5875"}>
-                            {
-                                (fill) => (
-                                    <View style={s.inDial}>
-                                        <Text style={s.dialValue}>
-                                            {fill}
-                                        </Text>
-                                        <Text style={s.kmh}>
-                                            KM/H
-                                        </Text>
-                                    </View>
-                                )
-                            }
-                        </AnimatedCircularProgress>
-                        */}
+                        {/*The dropdown for the User's Current Car*/}
                         <Picker
                             selectedValue={this.state.currentCar}
                             style={{height: 50, width: 200, color: '#FFFFFF', fontSize: 22,}}
                             onValueChange={(itemValue, itemIndex) =>
                                 this.setState({currentCar: itemValue})
                             }>
+                            {/*for each vehicle, create a drop down item for it, with a unique key*/}
                             {this.state.vehicles.map((item, index) => {
                                 return (<Picker.Item style={{color: '#FFFFFF', fontSize: 22,}} label={item} value={item}
                                                      key={index}/>)
                             })}
                         </Picker>
+                        {/*The button for toggling if the user is driving or not*/}
                         <TouchableOpacity
                             style={(this.state.driving) ? s.stop : s.start}
                             onPress={this.toggleDriving}

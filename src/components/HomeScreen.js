@@ -15,6 +15,8 @@ class HomeScreen extends React.Component {
         this.state = {
             scores: [],
             avgScore: 0,
+            seven: 68,
+            lastScore: 84,
         }
     }
 
@@ -41,6 +43,11 @@ class HomeScreen extends React.Component {
     componentDidMount() {
         this.requestLocationPermission();
         //check to see if SessionList exists in the store
+        this.maybeInitAsync();
+        this.getScores();
+    }
+
+    async maybeInitAsync() {
         let good = false;
         let good2 = false;
         let good3 = false;
@@ -79,15 +86,21 @@ class HomeScreen extends React.Component {
                 }
             });
         });
-        this.getScores();
     }
 
     async getScores() {
         fetch('https://ne6nmf3qcf.execute-api.us-east-1.amazonaws.com/dev/userData?userID=' + await AsyncStorage.getItem("UserId"))
             .then((response) => response.json())
             .then((responseJson) => {
-                //alert(JSON.stringify(responseJson));
-                this.setState({scores: responseJson.sessionScores, avgScore: Math.round(responseJson.userScore)});
+                if (responseJson.status === 400) {
+                    alert(JSON.stringify(responseJson));
+                } else {
+                    this.setState({
+                        lastScore: Math.round(responseJson.lastsessionScore),
+                        avgScore: Math.round(responseJson.userScore),
+                        seven: Math.round(responseJson.averageOfSessions)
+                    });
+                }
             })
             .catch((error) => {
                 // alert("oof");
@@ -102,9 +115,9 @@ class HomeScreen extends React.Component {
                     onWillFocus={payload => this.getScores()}
                 />
                 <View style={s.wrapper}>
-                    <View style={s.circleWrapper}>
+                    <View style={s.largeCircleWrapper}>
                         <AnimatedCircularProgress
-                            size={300}
+                            size={320}
                             width={10}
                             fill={this.state.avgScore}
                             tintColor={(this.state.avgScore > 100) ? "#FFFFFF" : "#5ee0fa"}
@@ -130,9 +143,9 @@ class HomeScreen extends React.Component {
                     <View style={s.twoCircleWrapper}>
                         <View style={s.circleWrapper}>
                             <AnimatedCircularProgress
-                                size={100}
+                                size={125}
                                 width={5}
-                                fill={this.state.avgScore}
+                                fill={this.state.lastScore}
                                 tintColor={(this.state.avgScore > 100) ? "#FFFFFF" : "#5ee0fa"}
                                 backgroundColor={(this.state.avgScore > 100) ? "#5ee0fa" : "#3d5875"}>
                                 {
@@ -140,22 +153,24 @@ class HomeScreen extends React.Component {
                                         <View style={s.inDial}>
                                             <View style={s.smallDialValue}>
                                                 <Text style={s.smallDialValueText}>
-                                                    {this.state.avgScore}
+                                                    {this.state.lastScore}
                                                 </Text>
                                             </View>
                                         </View>
                                     )
                                 }
                             </AnimatedCircularProgress>
-                            <Text style={s.kmhText}>
-                                LAST SESSION
-                            </Text>
+                            <View style={s.circleLabel}>
+                                <Text style={s.kmhText}>
+                                    LAST SESSION
+                                </Text>
+                            </View>
                         </View>
                         <View style={s.circleWrapper}>
                             <AnimatedCircularProgress
-                                size={100}
+                                size={125}
                                 width={5}
-                                fill={this.state.avgScore}
+                                fill={this.state.seven}
                                 tintColor={(this.state.avgScore > 100) ? "#FFFFFF" : "#5ee0fa"}
                                 backgroundColor={(this.state.avgScore > 100) ? "#5ee0fa" : "#3d5875"}>
                                 {
@@ -163,16 +178,18 @@ class HomeScreen extends React.Component {
                                         <View style={s.inDial}>
                                             <View style={s.smallDialValue}>
                                                 <Text style={s.smallDialValueText}>
-                                                    {this.state.avgScore}
+                                                    {this.state.seven}
                                                 </Text>
                                             </View>
                                         </View>
                                     )
                                 }
                             </AnimatedCircularProgress>
-                            <Text style={s.kmhText}>
-                                PAST 7 SCORES
-                            </Text>
+                            <View style={s.circleLabel}>
+                                <Text style={s.kmhText}>
+                                    PAST 7 SCORES
+                                </Text>
+                            </View>
                         </View>
                     </View>
                     {/*<Image*/}
@@ -194,34 +211,34 @@ class HomeScreen extends React.Component {
                             </View>
                             <Text style={s.buttonText}>DRIVE</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={s.button}
-                            onPress={() => {
-                                this.props.navigation.navigate("Analytics");
-                            }}>
-                            <View style={s.icon}>
-                                <Icon
-                                    name='timeline'
-                                    type='material'
-                                    color='#5EE0FA'
-                                />
-                            </View>
-                            <Text style={s.buttonText}>ANALYTICS</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={s.button}
-                            onPress={() => {
-                                this.props.navigation.navigate("Settings");
-                            }}>
-                            <View style={s.icon}>
-                                <Icon
-                                    name="settings"
-                                    type="material"
-                                    color='#5EE0FA'
-                                />
-                            </View>
-                            <Text style={s.buttonText}>SETTINGS</Text>
-                        </TouchableOpacity>
+                        {/*    <TouchableOpacity*/}
+                        {/*        style={s.button}*/}
+                        {/*        onPress={() => {*/}
+                        {/*            this.props.navigation.navigate("Analytics");*/}
+                        {/*        }}>*/}
+                        {/*        <View style={s.icon}>*/}
+                        {/*            <Icon*/}
+                        {/*                name='timeline'*/}
+                        {/*                type='material'*/}
+                        {/*                color='#5EE0FA'*/}
+                        {/*            />*/}
+                        {/*        </View>*/}
+                        {/*        <Text style={s.buttonText}>ANALYTICS</Text>*/}
+                        {/*    </TouchableOpacity>*/}
+                        {/*    <TouchableOpacity*/}
+                        {/*        style={s.button}*/}
+                        {/*        onPress={() => {*/}
+                        {/*            this.props.navigation.navigate("Settings");*/}
+                        {/*        }}>*/}
+                        {/*        <View style={s.icon}>*/}
+                        {/*            <Icon*/}
+                        {/*                name="settings"*/}
+                        {/*                type="material"*/}
+                        {/*                color='#5EE0FA'*/}
+                        {/*            />*/}
+                        {/*        </View>*/}
+                        {/*        <Text style={s.buttonText}>SETTINGS</Text>*/}
+                        {/*    </TouchableOpacity>*/}
                     </View>
                 </View>
             </SafeAreaView>
