@@ -113,14 +113,47 @@ class AnalyticsChart extends React.Component {
                     }
                 }]
         };
+        let xAxis= {
+            textColor: processColor('#FFFFFF'),
+        };
+        let yAxis= {
+            textColor: processColor('#FFFFFF'),
+        };
+        let legend= {
+            enabled: true,
+                textColor:
+            processColor('#FFFFFF'),
+                textSize:
+            12,
+                position:
+            'BELOW_CHART_RIGHT',
+                form:
+            'SQUARE',
+                formSize:
+            14,
+                xEntrySpace:
+            10,
+                yEntrySpace:
+            5,
+                formToTextSpace:
+            5,
+                wordWrapEnabled:
+            true,
+                maxSizePercent:
+            0.5,
+                fontFamily:
+            'monospace',
+                fontStyle:
+            1,
+        };
         return (
             <View style={{flex: 1}}>
                 <LineChart
                     style={s.chart}
                     data={data}
-                    xAxis={this.state.xAxis}
-                    yAxis={this.state.yAxis}
-                    legend={this.state.legend}
+                    xAxis={xAxis}
+                    yAxis={yAxis}
+                    legend={legend}
                     chartDescription={{text: 'Acceleration', textColor: processColor('#FFFFFF'), textSize: 22}}
                     drawGridBackground={false}
                     borderColor={processColor('#FFFFFF')}

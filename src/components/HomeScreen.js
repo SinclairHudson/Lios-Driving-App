@@ -71,7 +71,7 @@ class HomeScreen extends React.Component {
                     }
                 });
                 if (!good) {    // if SessionList is not in the store, add it with empty.
-                    AsyncStorage.setItem('SessionList', JSON.stringify({list: ['Alpha', 'Beta']}));
+                    AsyncStorage.setItem('SessionList', JSON.stringify({list: []}));
                 }
                 if (!good2) {    // if UserId is not in the store, add it with empty.
                     UUIDGenerator.getRandomUUID((uuid) => {

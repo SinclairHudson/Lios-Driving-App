@@ -72,7 +72,7 @@ class DataScreen extends React.Component {
                                                 AsyncStorage.removeItem(key);
                                             }
                                         });
-                                        AsyncStorage.setItem('SessionList', JSON.stringify({list: ['Alpha']}));
+                                        AsyncStorage.setItem('SessionList', JSON.stringify({list: []}));
                                         AsyncStorage.setItem('CarList', JSON.stringify({list: ['McQueen']}));
                                         AsyncStorage.setItem('currentCar', "McQueen");
                                     });
