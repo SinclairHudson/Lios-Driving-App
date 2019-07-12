@@ -1,102 +1,178 @@
-import { Dimensions, Text, View, ScrollView, Picker} from "react-native";
+import {Dimensions, Text, View, ScrollView, Picker, processColor} from "react-native";
 import s from "./styling";
 import AsyncStorage from '@react-native-community/async-storage';
-import {LineChart} from "react-native-chart-kit";
 import React from 'react';
+import {LineChart} from 'react-native-charts-wrapper';
 import LinearGradient from "react-native-linear-gradient";
 
 class AnalyticsChart extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            Ax: [0,0,0,0,0],
-            Ay: [0,0,0,0,0],
-            Az: [0,0,0,0,0],
-            timestamps: [0,0,0,0,0],
-            speeds: [0,0,0,0,0]
+            session: this.props.session,
+            userID: 'a9b9be93-914c-4a17-a4e6-797533a6e782',
+            Ax: [{x: 0, y: 5.023107051849365}, {x: 1, y: 1.3409830331802368}],
+            Ay: [{x: 0, y: 5.023107051849365}, {x: 500, y: 1.3409830331802368}],
+            Az: [{x: 0, y: 5.023107051849365}, {x: 500, y: 1.3409830331802368}],
+            speeds: [{x: 5, y: 94}],
+            xAxis: {
+                textColor: processColor('#FFFFFF'),
+            },
+            yAxis: {
+                textColor: processColor('#FFFFFF'),
+            },
+            legend: {
+                enabled: true,
+                textColor:
+                    processColor('#FFFFFF'),
+                textSize:
+                    12,
+                position:
+                    'BELOW_CHART_RIGHT',
+                form:
+                    'SQUARE',
+                formSize:
+                    14,
+                xEntrySpace:
+                    10,
+                yEntrySpace:
+                    5,
+                formToTextSpace:
+                    5,
+                wordWrapEnabled:
+                    true,
+                maxSizePercent:
+                    0.5,
+                fontFamily:
+                    'monospace',
+                fontStyle:
+                    1,
+            },
+            loading: false
         };
     }
 
-    componentDidMount(){
-        try {
-            AsyncStorage.getItem(this.props.session)
-                .then(data => {
-                    this.setState(JSON.parse(data));
-
-                }).done();
-        } catch (er) {
-            error(er);
+    componentDidUpdate(prevProps) {
+        alert("I should change");
+        if (prevProps.session !== this.props.session) {
+            this.setState({session: this.props.session});
         }
     }
 
+    componentDidMount() {
+        alert("Doing a fetch");
+        fetch('https://ne6nmf3qcf.execute-api.us-east-1.amazonaws.com/dev/sessionData?userID=' + this.state.userID + '&startTimestamp=' + this.state.session)
+            .then((response) => response.json())
+            .then((responseJson) => {
+                this.setState(
+                    {
+                        Ax: responseJson.Ax,
+                        Ay: responseJson.Ay,
+                        Az: responseJson.Az,
+                        speeds: responseJson.Speed
+                    });
+                alert(JSON.stringify(this.state.Ax));
+            })
+            .catch((error) => {
+                alert(JSON.stringify(error));
+            });
+    }
+
     render() {
+        let data = {
+            dataSets: [
+                {
+                    values: this.state.Ax,
+                    label: 'X',
+                    config: {
+                        color: processColor('#FFFFFF')
+                    }
+                },
+                {
+                    values: this.state.Ay,
+                    label: 'Y',
+                    config: {
+                        color: processColor('#5EDFF9')
+                    }
+                },
+                {
+                    values: this.state.Az,
+                    label: 'Z',
+                    config: {
+                        color: processColor('#5cbbff')
+                    }
+                }]
+        };
+        let speedData = {
+            dataSets: [
+                {
+                    values: this.state.speeds,
+                    label: 'Speed',
+                    config: {
+                        color: processColor('#FFFFFF')
+                    }
+                }]
+        };
         return (
-                <ScrollView>
-                    <View>
-                        <Text style={s.chartLabel}>Acceleration</Text>
-                        <LineChart
-                            data={{
-                                labels: ["start", "end"],
-                                datasets: [{
-                                    data: this.state.Ax
-                                },
-                                    {
-                                        data: this.state.Az
-                                    },
-                                    {
-                                        data: this.state.Ay
-                                    }
-                                ]
-                            }}
-                            width={Dimensions.get('window').width - 20} // from react-native
-                            height={220}
-                            chartConfig={{
-                                backgroundColor: '#040404',
-                                backgroundGradientFrom: '#0a3c5d',
-                                backgroundGradientTo: '#0a3c5d',
-                                decimalPlaces: 2, // optional, defaults to 2dp
-                                color: (opacity = 1) => `rgba(255, 214, 48, ${opacity})`,
-                                style: {
-                                    borderRadius: 16
-                                }
-                            }}
-                            bezier
-                            style={{
-                                margin: 20,
-                                borderRadius: 16
-                            }}
-                            fromZero={true}/>
-                    </View>
-                    <View>
-                        <Text style={s.chartLabel}>Speed</Text>
-                        <LineChart
-                            data={{
-                                labels: ["alpha", "bravo", "charlie", "delta", "echo"],
-                                datasets: [{
-                                    data: this.state.speeds
-                                }]
-                            }}
-                            width={Dimensions.get('window').width} // from react-native
-                            height={220}
-                            yAxisLabel={'acc'}
-                            chartConfig={{
-                                backgroundColor: '#040404',
-                                backgroundGradientFrom: '#0a3c5d',
-                                backgroundGradientTo: '#0a3c5d',
-                                decimalPlaces: 2, // optional, defaults to 2dp
-                                color: (opacity = 1) => `rgba(255, 214, 48, ${opacity})`,
-                                style: {
-                                    borderRadius: 16
-                                }
-                            }}
-                            bezier
-                            style={{
-                                margin: 20,
-                                borderRadius: 16
-                            }}
-                            fromZero={true}/>
-                    </View>
-                </ScrollView>
+            <View style={{flex: 1}}>
+                <LineChart
+                    style={s.chart}
+                    data={data}
+                    xAxis={this.state.xAxis}
+                    yAxis={this.state.yAxis}
+                    legend={this.state.legend}
+                    chartDescription={{text: 'Acceleration', textColor: processColor('#FFFFFF'), textSize: 22}}
+                    drawGridBackground={false}
+                    borderColor={processColor('#FFFFFF')}
+                    borderWidth={1}
+                    drawBorders={true}
+                    marker={this.state.marker}
+                    autoScaleMinMaxEnabled={false}
+                    touchEnabled={true}
+                    dragEnabled={true}
+                    scaleEnabled={false}
+                    scaleXEnabled={false}
+                    scaleYEnabled={false}
+                    pinchZoom={true}
+                    doubleTapToZoomEnabled={true}
+                    highlightPerTapEnabled={true}
+                    highlightPerDragEnabled={false}
+                    // visibleRange={this.state.visibleRange}
+                    dragDecelerationEnabled={true}
+                    dragDecelerationFrictionCoef={0.99}
+                    ref="chart"
+                    keepPositionOnRotation={false}
+                    onChange={(event) => console.log(event.nativeEvent)}
+                />
+                <LineChart
+                    style={s.chart}
+                    data={speedData}
+                    xAxis={this.state.xAxis}
+                    yAxis={this.state.yAxis}
+                    chartDescription={{text: 'Speed', textColor: processColor('#FFFFFF'), textSize: 22}}
+                    drawGridBackground={false}
+                    borderColor={processColor('#FFFFFF')}
+                    borderWidth={1}
+                    drawBorders={true}
+                    marker={this.state.marker}
+                    autoScaleMinMaxEnabled={false}
+                    touchEnabled={true}
+                    dragEnabled={true}
+                    scaleEnabled={false}
+                    scaleXEnabled={false}
+                    scaleYEnabled={false}
+                    pinchZoom={true}
+                    doubleTapToZoomEnabled={true}
+                    highlightPerTapEnabled={true}
+                    highlightPerDragEnabled={false}
+                    // visibleRange={this.state.visibleRange}
+                    dragDecelerationEnabled={true}
+                    dragDecelerationFrictionCoef={0.99}
+                    ref="chart"
+                    keepPositionOnRotation={false}
+                    onChange={(event) => console.log(event.nativeEvent)}
+                />
+            </View>
         );
     }
 }

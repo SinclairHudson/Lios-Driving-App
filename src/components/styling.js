@@ -1,6 +1,17 @@
+//this is the main styleSheet for all the app. Use Ctrl+F to find everything.
 import {StyleSheet, Platform, absoluteFillObject} from "react-native";
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        margin: 50,
+        height: 100,
+    },
+    chart: {
+        flex: 1,
+        width: 360,
+        height: 250,
+    },
     droidSafeArea: {
         flex: 1,
         backgroundColor: "#152d44",
