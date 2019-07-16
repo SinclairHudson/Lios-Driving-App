@@ -209,7 +209,9 @@ class HomeScreen extends React.Component {
                                     color='#5EE0FA'
                                 />
                             </View>
-                            <Text style={s.buttonText}>DRIVE</Text>
+                            <View style={{flex: 4, justifyContent: 'center', alignItems: 'center'}}>
+                                <Text style={s.buttonText}>DRIVE</Text>
+                            </View>
                         </TouchableOpacity>
                         {/*    <TouchableOpacity*/}
                         {/*        style={s.button}*/}

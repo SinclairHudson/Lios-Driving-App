@@ -425,7 +425,7 @@ class DrivingScreen extends React.Component {
                                         alert(JSON.stringify(err));
                                     }
                                     //If all goes according to plan, alert saying that the push was successful.
-                                    alert("session pushed and deleted, sessionList shifted.")
+                                    alert("Session was successfully recorded.")
                                 });
                             });
                         });
@@ -503,7 +503,7 @@ class DrivingScreen extends React.Component {
                         {/*The dropdown for the User's Current Car*/}
                         <Picker
                             selectedValue={this.state.currentCar}
-                            style={{height: 50, width: 200, color: '#FFFFFF', fontSize: 22,}}
+                            style={{height: 50, width: 200, color: '#FFFFFF', fontSize: 25,}}
                             onValueChange={(itemValue, itemIndex) =>
                                 this.setState({currentCar: itemValue})
                             }>

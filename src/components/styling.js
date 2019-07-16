@@ -29,7 +29,9 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     buttonText:{
-        flex: 3,
+        flex: 1,
+        marginTop: 12,
+        marginRight: 30,
         fontSize: 25,
         color: "rgba(255,255,255,1)",
     },

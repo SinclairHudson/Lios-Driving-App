@@ -12,12 +12,12 @@ class AnalyticsScreen extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            session: '',
+            session: "Select a Session",
             sessions: [],
-            userID: '',
-            Ax: [{x: 0, y: 5.023107051849365}, {x: 1, y: 1.3409830331802368}],
-            Ay: [{x: 0, y: 5.023107051849365}, {x: 500, y: 1.3409830331802368}],
-            Az: [{x: 0, y: 5.023107051849365}, {x: 500, y: 1.3409830331802368}],
+            userID: null,
+            Ax: [{x: 0, y: 2}, {x: 1, y: 2}],
+            Ay: [{x: 0, y: 1}, {x: 1, y: 1}],
+            Az: [{x: 0, y: 0}, {x: 1, y: 0}],
             speeds: [{x: 5, y: 94}],
             loading: false
         };
@@ -25,15 +25,14 @@ class AnalyticsScreen extends React.Component {
 
     componentDidMount() {
         this.updateSessionList();
-        this.fetchSession();
     }
 
     fetchSession() {
-        if(this.state.userID !== null && this.state.session !== null) {
+        if (this.state.userID !== null && this.state.session !== null) {
             fetch('https://ne6nmf3qcf.execute-api.us-east-1.amazonaws.com/dev/sessionData?userID=' + this.state.userID + '&startTimestamp=' + this.state.session)
                 .then((response) => response.json())
                 .then((responseJson) => {
-                    alert("Response of " + this.state.userID + " " + this.state.session + " " + JSON.stringify(responseJson));
+                    // alert("Response of " + this.state.userID + " " + this.state.session + " " + JSON.stringify(responseJson));
                     this.setState(
                         {
                             Ax: responseJson.Ax,
@@ -75,6 +74,7 @@ class AnalyticsScreen extends React.Component {
                     values: this.state.Ax,
                     label: 'X',
                     config: {
+                        drawCircles: false,
                         color: processColor('#FFFFFF')
                     }
                 },
@@ -82,6 +82,7 @@ class AnalyticsScreen extends React.Component {
                     values: this.state.Ay,
                     label: 'Y',
                     config: {
+                        drawCircles: false,
                         color: processColor('#5EDFF9')
                     }
                 },
@@ -89,6 +90,7 @@ class AnalyticsScreen extends React.Component {
                     values: this.state.Az,
                     label: 'Z',
                     config: {
+                        drawCircles: false,
                         color: processColor('#5cbbff')
                     }
                 }]
@@ -99,6 +101,7 @@ class AnalyticsScreen extends React.Component {
                     values: this.state.speeds,
                     label: 'Speed',
                     config: {
+                        drawCircles: false,
                         color: processColor('#FFFFFF')
                     }
                 }]
@@ -149,11 +152,15 @@ class AnalyticsScreen extends React.Component {
                         selectedValue={this.state.session}
                         style={{height: 50, width: 200, color: '#FFFFFF', fontSize: 22,}}
                         onValueChange={(itemValue, itemIndex) => {
-                            this.setState({session: itemValue});
-                            this.fetchSession();
+                            this.setState({session: itemValue}, () => {
+                                this.fetchSession();
+                            })
                         }
 
                         }>
+                        <Picker.Item style={{color: '#FFFFFF', fontSize: 22,}}
+                                     label={"Select a Session"} value={null}
+                                     key={-1}/>
                         {/*for each vehicle, create a drop down item for it, with a unique key*/}
                         {this.state.sessions.map((item, index) => {
                             return (
@@ -171,6 +178,37 @@ class AnalyticsScreen extends React.Component {
                             yAxis={yAxis}
                             legend={legend}
                             chartDescription={{text: 'Acceleration', textColor: processColor('#FFFFFF'), textSize: 22}}
+                            drawGridBackground={false}
+                            borderColor={processColor('#FFFFFF')}
+                            borderWidth={1}
+                            drawBorders={true}
+                            marker={this.state.marker}
+                            autoScaleMinMaxEnabled={false}
+                            touchEnabled={true}
+                            dragEnabled={true}
+                            scaleEnabled={true}
+                            scaleXEnabled={true}
+                            scaleYEnabled={true}
+                            pinchZoom={true}
+                            doubleTapToZoomEnabled={true}
+                            highlightPerTapEnabled={true}
+                            highlightPerDragEnabled={false}
+                            // visibleRange={this.state.visibleRange}
+                            dragDecelerationEnabled={true}
+                            dragDecelerationFrictionCoef={0.99}
+                            ref="chart"
+                            keepPositionOnRotation={false}
+                            onChange={(event) => console.log(event.nativeEvent)}
+                        />
+                    </View>
+                    <View style={{flex: 1}}>
+                        <LineChart
+                            style={s.chart}
+                            data={speedData}
+                            xAxis={xAxis}
+                            yAxis={yAxis}
+                            legend={legend}
+                            chartDescription={{text: 'Speed', textColor: processColor('#FFFFFF'), textSize: 22}}
                             drawGridBackground={false}
                             borderColor={processColor('#FFFFFF')}
                             borderWidth={1}

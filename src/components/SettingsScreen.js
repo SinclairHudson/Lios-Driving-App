@@ -55,9 +55,6 @@ class SettingsScreen extends React.Component {
                     <Text style={s.text}>
                         {item}                      
                     </Text>
-                    <Text style={s.text}>
-                        {index}
-                    </Text>
                     <TouchableOpacity
                         onPress={()=>{
                         this.setState({ vehicles: this.state.vehicles.slice(0, index).concat(this.state.vehicles.slice(index+1))});
@@ -138,7 +135,7 @@ class SettingsScreen extends React.Component {
                     <ScrollView style={{flex: 4}}>
                         {this.listImages()}
                         <TouchableOpacity
-                            style={[s.button, {height: 30}]}
+                            style={[s.button, {height: 61}]}
                             onPress={() => {
                                 this.setModalVisible(true);
                             }}>
@@ -149,7 +146,9 @@ class SettingsScreen extends React.Component {
                                     color='#5EE0FA'
                                 />
                             </View>
-                            <Text style={s.buttonText}>Add Vehicle</Text>
+                            <View style={{flex: 4, justifyContent: 'center', alignItems: 'center'}}>
+                                <Text style={s.buttonText}>Add Vehicle</Text>
+                            </View>
                         </TouchableOpacity>
                     </ScrollView>
                 </View>
