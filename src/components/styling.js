@@ -1,6 +1,7 @@
-//this is the main styleSheet for all the app. Use Ctrl+F to find everything.
-import {StyleSheet, Platform, absoluteFillObject} from "react-native";
+import {Platform, StyleSheet} from "react-native";
 
+//this is the main styleSheet for all the app. Use Ctrl+F to find everything.
+//The styling is similar to that of CSS, but there are notable exceptions. It uses flexbox, and is based on CSS.
 const styles = StyleSheet.create({
     container: {
         flex: 1,

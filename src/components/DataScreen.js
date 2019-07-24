@@ -1,10 +1,8 @@
-import {Image, Text, TouchableOpacity, View, SafeAreaView, Picker, Button, ScrollView} from "react-native";
-import {withNavigation} from 'react-navigation';
+import {Button, SafeAreaView, ScrollView, Text, TouchableOpacity, View} from "react-native";
 import AsyncStorage from '@react-native-community/async-storage';
 import s from "./styling";
 import {Icon} from 'react-native-elements'
 import React from 'react';
-import LinearGradient from 'react-native-linear-gradient';
 
 class DataScreen extends React.Component {
     constructor(props) {
@@ -15,21 +13,10 @@ class DataScreen extends React.Component {
     }
 
     componentDidMount() {
-        AsyncStorage.getAllKeys((err, keys) => {
-            AsyncStorage.multiGet(keys, (err, stores) => {
-                let textElements = [];
-                stores.map((result, i, store) => {
-                    // get at each store's key/value so you can work with it
-                    let key = store[i][0];
-                    let value = store[i][1];
-                    textElements.push(key);
-                    textElements.push(value);
-                });
-                this.setState({list: textElements})
-            });
-        });
+        this.refresh()
     }
 
+    //refresh just throws everything in asyncstorage into the state.
     refresh() {
         AsyncStorage.getAllKeys((err, keys) => {
             AsyncStorage.multiGet(keys, (err, stores) => {
@@ -46,6 +33,7 @@ class DataScreen extends React.Component {
         });
     }
 
+    //Display everything in it's own Text Element.
     displayStore() {
         return this.state.list.map((element, index) => (<Text style={s.text} key={index}>{element}</Text>));
     }
@@ -60,6 +48,8 @@ class DataScreen extends React.Component {
                         }}/>
                     </View>
                     <View style={s.buttons}>
+                        {/*This button Clears AsyncStorage, initializing with some default values so that not everything will*/}
+                        {/*crash. Be careful using this button!*/}
                         <TouchableOpacity
                             style={s.button}
                             onPress={() => {
@@ -72,6 +62,7 @@ class DataScreen extends React.Component {
                                                 AsyncStorage.removeItem(key);
                                             }
                                         });
+                                        //set some defaults
                                         AsyncStorage.setItem('SessionList', JSON.stringify({list: []}));
                                         AsyncStorage.setItem('CarList', JSON.stringify({list: ['McQueen']}));
                                         AsyncStorage.setItem('currentCar', "McQueen");
@@ -90,7 +81,8 @@ class DataScreen extends React.Component {
                     </View>
                     <View style={s.buttons}>
                         <ScrollView>
-                            {this.displayStore()}
+                            {//just vomit the whole storage into a scrollview.
+                                this.displayStore()}
                         </ScrollView>
                     </View>
                 </View>

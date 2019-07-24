@@ -1,12 +1,15 @@
-import {Image, Text, TouchableOpacity, View, Picker, Alert, SafeAreaView, PermissionsAndroid} from "react-native";
-import {NavigationEvents, withNavigation} from 'react-navigation';
+import {PermissionsAndroid, SafeAreaView, Text, TouchableOpacity, View} from "react-native";
+import {NavigationEvents} from 'react-navigation';
 import AsyncStorage from '@react-native-community/async-storage';
 import s from "./styling";
 import {Icon} from 'react-native-elements'
 import React from 'react';
-import LinearGradient from 'react-native-linear-gradient';
 import UUIDGenerator from 'react-native-uuid-generator';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
+
+
+//this is the first screen that renders, and it has the user's scores on it, as well as a drive button.
+//scores go from 0 to 100, so a circular indicator is perfect.
 
 
 class HomeScreen extends React.Component {
@@ -15,11 +18,14 @@ class HomeScreen extends React.Component {
         this.state = {
             scores: [],
             avgScore: 0,
-            seven: 68,
-            lastScore: 84,
+            seven: 0,
+            lastScore: 0,
         }
     }
 
+    //this needs to be called when the app renders. Otherwise, GPS functionality won't work.
+    //this really only shows up once, when you first install the app, and after that it seems to remember that
+    // you already opted in.
     async requestLocationPermission() {
         try {
             const granted = await PermissionsAndroid.request(
@@ -40,13 +46,17 @@ class HomeScreen extends React.Component {
         }
     }
 
+
     componentDidMount() {
+        //get permission in case that hasn't been done yet.
         this.requestLocationPermission();
         //check to see if SessionList exists in the store
         this.maybeInitAsync();
         this.getScores();
     }
 
+    //initAsync checks to see if all the required fields are set in AsyncStorage. If they aren't then the app will certainly
+    //crash later on. So it sets SessionList, UserId, Carlist, and Options to make sure they're all initialized.
     async maybeInitAsync() {
         let good = false;
         let good2 = false;
@@ -88,6 +98,8 @@ class HomeScreen extends React.Component {
         });
     }
 
+    //getScores is a GET request to the AWS API backend. It gets all the score data for the user.
+
     async getScores() {
         fetch('https://ne6nmf3qcf.execute-api.us-east-1.amazonaws.com/dev/userData?userID=' + await AsyncStorage.getItem("UserId"))
             .then((response) => response.json())
@@ -95,6 +107,7 @@ class HomeScreen extends React.Component {
                 if (responseJson.status === 400) {
                     alert(JSON.stringify(responseJson));
                 } else {
+                    //pretty simple stuff. just update the state with the data that the backend returns.
                     this.setState({
                         lastScore: Math.round(responseJson.lastsessionScore),
                         avgScore: Math.round(responseJson.userScore),
@@ -111,10 +124,12 @@ class HomeScreen extends React.Component {
     render() {
         return (
             <SafeAreaView style={s.droidSafeArea}>
+                {/*get the scores whenever the user navigates to this page, because they may have just completed a session*/}
                 <NavigationEvents
-                    onWillFocus={payload => this.getScores()}
+                    onWillFocus={() => this.getScores()}
                 />
                 <View style={s.wrapper}>
+                    {/*This displays the user's current score, in a big progress circle.*/}
                     <View style={s.largeCircleWrapper}>
                         <AnimatedCircularProgress
                             size={320}
@@ -140,6 +155,7 @@ class HomeScreen extends React.Component {
                             }
                         </AnimatedCircularProgress>
                     </View>
+                    {/*These next two circles show last session's score, and the average of the past 7 scores*/}
                     <View style={s.twoCircleWrapper}>
                         <View style={s.circleWrapper}>
                             <AnimatedCircularProgress
@@ -192,11 +208,8 @@ class HomeScreen extends React.Component {
                             </View>
                         </View>
                     </View>
-                    {/*<Image*/}
-                    {/*    source={require("../assets/LiosLogo.png")}*/}
-                    {/*    style={s.image}*/}
-                    {/*/>*/}
                     <View style={s.buttons}>
+                        {/*Button that takes you to the driving screen*/}
                         <TouchableOpacity
                             style={s.button}
                             onPress={() => {
@@ -213,34 +226,6 @@ class HomeScreen extends React.Component {
                                 <Text style={s.buttonText}>DRIVE</Text>
                             </View>
                         </TouchableOpacity>
-                        {/*    <TouchableOpacity*/}
-                        {/*        style={s.button}*/}
-                        {/*        onPress={() => {*/}
-                        {/*            this.props.navigation.navigate("Analytics");*/}
-                        {/*        }}>*/}
-                        {/*        <View style={s.icon}>*/}
-                        {/*            <Icon*/}
-                        {/*                name='timeline'*/}
-                        {/*                type='material'*/}
-                        {/*                color='#5EE0FA'*/}
-                        {/*            />*/}
-                        {/*        </View>*/}
-                        {/*        <Text style={s.buttonText}>ANALYTICS</Text>*/}
-                        {/*    </TouchableOpacity>*/}
-                        {/*    <TouchableOpacity*/}
-                        {/*        style={s.button}*/}
-                        {/*        onPress={() => {*/}
-                        {/*            this.props.navigation.navigate("Settings");*/}
-                        {/*        }}>*/}
-                        {/*        <View style={s.icon}>*/}
-                        {/*            <Icon*/}
-                        {/*                name="settings"*/}
-                        {/*                type="material"*/}
-                        {/*                color='#5EE0FA'*/}
-                        {/*            />*/}
-                        {/*        </View>*/}
-                        {/*        <Text style={s.buttonText}>SETTINGS</Text>*/}
-                        {/*    </TouchableOpacity>*/}
                     </View>
                 </View>
             </SafeAreaView>

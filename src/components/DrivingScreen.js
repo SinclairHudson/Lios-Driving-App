@@ -1,27 +1,22 @@
-import {
-    Dimensions,
-    Text,
-    View,
-    TouchableOpacity,
-    Vibration,
-    Alert,
-    SafeAreaView,
-    PermissionsAndroid,
-    Button, Picker,
-} from "react-native";
+import {Picker, SafeAreaView, Text, TouchableOpacity, Vibration, View,} from "react-native";
 import AsyncStorage from '@react-native-community/async-storage';
 import React from 'react';
 import s from './styling';
 import MapViewDirections from 'react-native-maps-directions';
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
-import LinearGradient from "react-native-linear-gradient";
-import AccValues from "./AccValues";
-import Tracker from "./Tracker";
 import {accelerometer} from "react-native-sensors";
-import MapView, {OverlayComponent} from 'react-native-maps';
+import MapView from 'react-native-maps';
 import {NavigationEvents} from 'react-navigation';
 
+//these are the constants used for the Google maps components. You'll have to register your app with google to get the
+// google maps api key, which is a little confusing but not time-consuming. Below a certain threshold, using this API
+// is free.
 
+let GOOGLE_MAPS_APIKEY = 'YouNeedYourOwnKey!';
+
+//mapStyle is the massive object that specifies how every element of the google map is rendered.
+// if you want to have all bodies of water displayed as bright pink, you can do that here.
+// it would be a pain to manually edit this 250 line object, so go to
+// https://mapstyle.withgoogle.com/ to use a GUI, and then download whatever you create and paste it here.
 let mapStyle = [
     {
         "elementType": "geometry",
@@ -255,7 +250,10 @@ let mapStyle = [
         ]
     }
 ];
-let GOOGLE_MAPS_APIKEY = 'AIzaSyBOxltbqEmdl2WW-mg96uHSTGzWSEy_yzM';
+
+//interval is important: it specifies how many milliseconds must pass between data points. If this is very low, you might
+// run into performance issues. We found that half a second was good enough and captured all the features we needed.
+const interval = 500;
 
 class DrivingScreen extends React.Component {
     constructor(props) {
@@ -273,14 +271,18 @@ class DrivingScreen extends React.Component {
             latitude: 0,
             timestamp: -1,
         };
+        //accelerometer.subscribe basically means that every time the accelerometer gets a new value, call this function
         accelerometer.subscribe(({x, y, z, timestamp}) => {
-            if (timestamp - this.state.timestamp > 500) {
+            //we don't want EVERY update, so make sure they're a small interval apart.
+            if (timestamp - this.state.timestamp > interval) {
+                //start by updating the state with the current sensor values.
                 this.setState({
                     Ax: x,
                     Ay: y,
                     Az: z,
                     timestamp: timestamp
                 });
+                // if we're actually driving, we have to log things.
                 if (this.state.driving) {
                     try {
                         AsyncStorage.getItem(this.state.sess, (error, result) => {
@@ -303,15 +305,19 @@ class DrivingScreen extends React.Component {
                 }
             }
         });
-        //binding this in functions to mean the DrivingScreen, not the Component that calls them.
+        //binding THIS in functions to mean the DrivingScreen, not the Component that calls them.
+        //basically, this always refers to the DrivingScreen component and all the functions can access the state.
         this.toggleDriving = this.toggleDriving.bind(this);
         this.sendCurrentSession = this.sendCurrentSession.bind(this);
         this.directions = this.directions.bind(this);
         this.updateCarList = this.updateCarList.bind(this);
     }
 
+    //addSession adds the current Session to the SessionList in AsyncStorage, so it can be accessed by the whole app.
+    //these sessions in the SessionList are indexed by the start timestamp, so they will appear in chronological order.
     addSession() {
         try {
+
             let string = String(this.state.timestamp);
             AsyncStorage.getItem('SessionList')
                 .then(data => {
@@ -323,6 +329,8 @@ class DrivingScreen extends React.Component {
                         if (err) {
                             alert(JSON.stringify(err));
                         }
+                        //initialize the object. We'll fill the arrays afterwards.
+                        // we add the user ID so that when we send this package to the backend, they know who sent it.
                         AsyncStorage.setItem(string, JSON.stringify({
                             Ax: [],
                             Ay: [],
@@ -333,6 +341,7 @@ class DrivingScreen extends React.Component {
                         }))
                     });
                 }).done();
+            //finish by setting the driving state to True, and set the current session to the current open session.
             this.setState({
                 driving: true,
                 sess: string,
@@ -343,20 +352,23 @@ class DrivingScreen extends React.Component {
     }
 
     //directions returns the object that overlays the Google map View, tracing a line from the origin to the destination.
+    //Currently, just the line is implemented, but you can add waypoints, markers, areas, etc. Check out the package on
+    //npm for more details, they have some nice demos.
     directions() {
-        if (this.state.latitude === 0) {
-            return;
-        } else {
+        //if the GPS hasn't started working, don't bother giving directions because the latitude and longitude will be
+        // the default (wrong) values. Nobody needs driving directions to the center of the Gulf of Guinea
+        if (this.state.latitude !== 0) {
             return (
+                //
                 <MapViewDirections
-                    origin={this.state}
-                    destination={{
-                        latitude: 43.476536,
-                        longitude: -80.539197,
+                    origin={this.state}  //the state has elements longitude and latitude, so passing in the whole object works
+                    destination={{     //destination is set to the best university in the world.     :)
+                        latitude: 43.471665,
+                        longitude: -80.543353,
                     }}
-                    apikey={GOOGLE_MAPS_APIKEY}
+                    apikey={GOOGLE_MAPS_APIKEY}     //required
                     strokeWidth={3}
-                    strokeColor={'hotpink'}
+                    strokeColor={'hotpink' /* <- very cool */}
                 />
             );
         }
@@ -368,16 +380,17 @@ class DrivingScreen extends React.Component {
         Vibration.vibrate([1, 100], false);
         if (!this.state.driving) {  //if we're starting to drive!!!!
             this.addSession();
-        } else {
+        } else {            //if we're stopping
             this.setState({
                 driving: !this.state.driving,
-                sess: this.state.sess,
-                timestamp: this.state.timestamp
             });
             //send all the data that we just collected to the backend.
             this.sendCurrentSession();
         }
     }
+
+    //sendCurrentSession is triggered as the user clicks "Stop Driving". It packages everything up and sends it to the
+    //backend by an AWS API POST.
 
     sendCurrentSession() {
         //get all the current session data from AsyncStorage
@@ -454,10 +467,13 @@ class DrivingScreen extends React.Component {
     }
 
     componentDidMount() {
+        //on first render, update the car list.
         this.updateCarList();
         //start streaming the GPS data to the state. the state updates every time geolocation gets new info.
+        //this stream is fairly unreliable tbh, but very accurate. So keep that in mind while debugging.
         this.watchId = navigator.geolocation.watchPosition(
             (position) => {
+                //every time we get a new position, update the state to reflect the most recent info.
                 this.setState({
                     speed: position.coords.speed,
                     longitude: position.coords.longitude,
@@ -470,23 +486,30 @@ class DrivingScreen extends React.Component {
                 });
                 alert(JSON.stringify(error));   //alert the error
             },
-            //high accuracy only seems to work outside..
+            //high accuracy only seems to work outside...
             {enableHighAccuracy: true, timeout: 200, maximumAge: 10, distanceFilter: 1}
         );
     }
 
     componentWillUnmount() {   //stop using GPS services, to not stalk users.
+        //this will only trigger when the app is actually closed.
         navigator.geolocation.clearWatch(this.watchId);
     }
 
     render() {
         return (
             // SafeAreaVew is supposed to allow the app to operate in the space beside the notch on top of phones.
+            // In my experience, it doesn't work on android, but that might change if it gets supported in the future.
             <SafeAreaView style={s.droidSafeArea}>
+                {/*Important tag: NavigationEvents onWillFocus triggers whenever the user navigates to this page*/}
+                {/*it's useful for re-rendering, but right now the only thing we need to update is the list of cars, in case they*/}
+                {/*came from settings and just added a vehicle.*/}
                 <NavigationEvents
                     onWillFocus={() => this.updateCarList()}
                 />
                 <View style={s.wrapper}>
+                    {/*MapView is the Google Maps component. You can't do native navigation services, because google*/}
+                    {/*keeps that for themselves. But, there is a crude workaround made by the community, implemented below.*/}
                     <MapView
                         initialRegion={{   //set initial coordinates to the Tannery Building in Downtown Kitchener, Ontario, Canada
                             latitude: 43.450901,
@@ -497,6 +520,7 @@ class DrivingScreen extends React.Component {
                         customMapStyle={mapStyle}
                         style={s.map}
                     >
+                        {/*Implements the bright pink line that renders over top of the map.*/}
                         {this.directions()}
                     </MapView>
                     <View style={s.bottomDriver}>
